@@ -54,8 +54,12 @@ void execute(int argc, char **argv) {
 		if (!std::getline(std::cin, line)) {
 			break;
 		}
-		std::cerr << "sending '" << line << "'" << std::endl;
-		serial->WriteAll(line, 1000);
+		Buffer out{line};
+		out.resize(out.size() + 1);
+		out[out.size() - 1] = '\n';
+		std::cerr << "sending '" << out << "'" << std::endl;
+
+		serial->WriteAll(out, 1000);
 		try {
 
 			serial->ReadLine(res);
