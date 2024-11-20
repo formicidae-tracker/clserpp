@@ -22,10 +22,10 @@ struct ManufacturerInfo {
 	std::string version;
 };
 
-class IOTimeout : cpptrace::runtime_error {
+class IOTimeout : public cpptrace::runtime_error {
 public:
-	IOTimeout()
-	    : cpptrace::runtime_error("timouted") {}
+	IOTimeout(uint32_t bytes)
+	    : cpptrace::runtime_error("timouted after " + std::to_string(bytes)) {}
 };
 
 class Serial {
@@ -78,15 +78,19 @@ public:
 		uint32_t read = 0;
 		while (read < buf.size()) {
 			uint32_t size = buf.size() - read;
-			details::call(
-			    clSerialRead,
-			    d_serial,
-			    &buf[read],
-			    &size,
-			    timeout_ms
-			);
+			try {
+				details::call(
+				    clSerialRead,
+				    d_serial,
+				    &buf[read],
+				    &size,
+				    timeout_ms
+				);
+			} catch (const details::clserException &e) {
+				throw;
+			}
 			if (size == 0) {
-				throw IOTimeout();
+				throw IOTimeout(read);
 			}
 			read += size;
 		}
@@ -97,35 +101,45 @@ public:
 		uint32_t written = 0;
 		while (written < buf.size()) {
 			uint32_t size = buf.size() - written;
-			details::call(
-			    clSerialWrite,
-			    d_serial,
-			    &buf[written],
-			    &size,
-			    timeout_ms
-			);
+			try {
+				details::call(
+				    clSerialWrite,
+				    d_serial,
+				    &buf[written],
+				    &size,
+				    timeout_ms
+				);
+			} catch (const details::clserException &e) {
+				throw;
+			}
+
 			if (size == 0) {
-				throw IOTimeout();
+				throw IOTimeout(written);
 			}
 			written += size;
 		}
 	}
 
 	template <typename Container>
-	void
+	size_t
 	ReadLine(Container &buf, char delim = '\n', uint32_t timeout_ms = 1000) {
 		uint32_t read = 0;
 		while (read < DefaultBufferSize) {
 			uint32_t size = DefaultBufferSize - read;
-			details::call(
-			    clSerialRead,
-			    d_serial,
-			    &buf[read],
-			    &size,
-			    timeout_ms
-			);
+			try {
+				details::call(
+				    clSerialRead,
+				    d_serial,
+				    &buf[read],
+				    &size,
+				    timeout_ms
+				);
+			} catch (const details::clserException &e) {
+				throw;
+			}
+
 			if (size == 0) {
-				throw IOTimeout();
+				throw IOTimeout(read);
 			}
 
 			read += size;
@@ -133,9 +147,10 @@ public:
 
 			if (std::find(buf.begin(), buf.begin() + read, delim) !=
 			    buf.begin() + read) {
-				return;
+				break;
 			}
 		}
+		return read;
 	}
 
 	uint32_t ByteAvailable() const {

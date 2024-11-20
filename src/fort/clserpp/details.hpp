@@ -11,20 +11,33 @@ namespace fort {
 namespace clserpp {
 namespace details {
 
+class clserException : public cpptrace::runtime_error {
+
+public:
+	clserException(int32_t code) noexcept
+	    : cpptrace::runtime_error(
+	          "clser error (" + std::to_string(code) +
+	          "): " + getErrorText(code)
+	      ) {}
+
+private:
+	std::string getErrorText(int32_t code) {
+		char     buffer[2000];
+		uint32_t size     = 2000;
+		int32_t  errorRes = clGetErrorText(code, buffer, &size);
+		if (errorRes != 0) {
+			return "could not get error text: error " +
+			       std::to_string(errorRes);
+		}
+		return buffer;
+	}
+};
+
 template <typename Fnct, typename... Args>
 void call(Fnct &&fnct, Args &&...args) {
 	int32_t res = std::forward<Fnct>(fnct)(std::forward<Args>(args)...);
 	if (res != 0) {
-		char     buffer[2000];
-		uint32_t size     = 2000;
-		int32_t  errorRes = clGetErrorText(res, buffer, &size);
-		if (errorRes != 0) {
-			throw cpptrace::logic_error(
-			    "clser error (" + std::to_string(res) +
-			    "): could not get error text: error " + std::to_string(errorRes)
-			);
-		}
-		throw cpptrace::runtime_error("clser error: " + std::string(buffer));
+		throw clserException(res);
 	}
 }
 

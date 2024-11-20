@@ -92,7 +92,7 @@ void execute(int argc, char **argv) {
 			std::cout << "<<< " << data << std::endl;
 		}
 
-		std::string res;
+		Buffer res{1000};
 		line.clear();
 		std::cout << ">>> " << std::flush;
 		if (!std::getline(std::cin, line)) {
@@ -100,7 +100,13 @@ void execute(int argc, char **argv) {
 		}
 		std::cerr << "sending '" << line << "'" << std::endl;
 		serial->WriteAll(line, 1000);
-		serial->ReadLine(res);
+		try {
+
+			serial->ReadLine(res);
+		} catch (const IOTimeout &e) {
+			std::cerr << "got error" << e.what() << std::endl;
+			continue;
+		}
 		std::cout << "<<< " << res << std::endl;
 	}
 }
