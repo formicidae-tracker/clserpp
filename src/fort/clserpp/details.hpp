@@ -37,7 +37,30 @@ inline const char *version_name(clVersion_e version) {
 	case CL_VERSION_1_1:
 		return "CL v1.1";
 	default:
-		return "Unknown version";
+		return "<unknown CL version>";
+	}
+}
+
+inline const char *baudrate_name(clBaudrate_e r) {
+	switch (r) {
+	case CL_BAUDRATE_9600:
+		return "CL_BAUDRATE_9600";
+	case CL_BAUDRATE_19200:
+		return "CL_BAUDRATE_19200";
+	case CL_BAUDRATE_38400:
+		return "CL_BAUDRATE_38400";
+	case CL_BAUDRATE_57600:
+		return "CL_BAUDRATE_57600";
+	case CL_BAUDRATE_115200:
+		return "CL_BAUDRATE_115200";
+	case CL_BAUDRATE_230400:
+		return "CL_BAUDRATE_230400";
+	case CL_BAUDRATE_460800:
+		return "CL_BAUDRATE_460800";
+	case CL_BAUDRATE_921600:
+		return "CL_BAUDRATE_921600";
+	default:
+		return "<unknown CL baudrate>";
 	}
 }
 

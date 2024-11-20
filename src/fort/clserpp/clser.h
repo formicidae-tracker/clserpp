@@ -53,7 +53,7 @@ int32_t clGetNumBytesAvail(clSerialRef_t serial, uint32_t *numBytes);
 int32_t clGetNumSerialPorts(uint32_t *serialPorts);
 int32_t clGetSerialPortIdentifier(uint32_t idx, char *buffer, uint32_t *size);
 int32_t clGetSupportedBaudRates(clSerialRef_t serial, uint32_t *baudrates);
-
+int32_t clSetBaudRate(clSerialRef_t serial, uint32_t baudrate);
 #ifdef __cplusplus
 }
 #endif

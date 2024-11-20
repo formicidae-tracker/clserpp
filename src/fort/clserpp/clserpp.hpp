@@ -2,10 +2,12 @@
 
 #include "clser.h"
 #include <cpptrace/exceptions.hpp>
+#include <functional>
 #include <memory>
 #include <vector>
 
 #include "details.hpp"
+#include <iostream>
 
 namespace fort {
 namespace clserpp {
@@ -136,6 +138,31 @@ public:
 		}
 	}
 
+	uint32_t ByteAvailable() const {
+		uint32_t res = 0;
+		details::call(clGetNumBytesAvail, d_serial, &res);
+		return res;
+	}
+
+	std::vector<clBaudrate_e> SupportedBaudrates() const {
+		uint32_t baudrates = 0;
+		details::call(clGetSupportedBaudRates, d_serial, &baudrates);
+
+		std::vector<clBaudrate_e> res;
+		res.reserve(32);
+		for (int i = 0; i < 32; i++) {
+			clBaudrate_e bd = clBaudrate_e(1 << i);
+			if ((baudrates & bd) != 0) {
+				res.push_back(bd);
+			}
+		}
+		return res;
+	}
+
+	void SetBaudrate(clBaudrate_e bd) {
+		details::call(clSetBaudRate, d_serial, bd);
+	}
+
 private:
 	Serial(uint32_t idx) {
 		details::call(clSerialInit, idx, &d_serial);
@@ -152,3 +179,7 @@ private:
 };
 } // namespace clserpp
 } // namespace fort
+
+std::ostream &operator<<(std::ostream &out, clBaudrate_e e) {
+	return out << fort::clserpp::details::baudrate_name(e);
+}
