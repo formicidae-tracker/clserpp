@@ -5,12 +5,13 @@ set(SRC_FILES clserpp.cpp)
 set(TEST_SRC_FILES test.cpp)
 set(TEST_HDR_FILES)
 add_library(clserpp ${SRC_FILES} ${HDR_FILES})
-target_link_libraries(clserpp ${CLSER_LIBRARY})
+target_link_libraries(clserpp ${CLSER_LIBRARY} cpptrace::cpptrace)
 
 if(CLSERPP_IMPORTED)
 	add_library(fort-clserpp::clserpp INTERFACE IMPORTED GLOBAL)
 	target_link_libraries(
 		fort-clserpp::clserpp INTERFACE clserpp ${CLSER_LIBRARY}
+										cpptrace::cpptrace
 	)
 	target_include_directories(
 		fort-clserpp::clserpp INTERFACE ${PROJECT_SOURCE_DIR}/src
