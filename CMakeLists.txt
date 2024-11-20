@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPGL-3.0-or-later
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(
 	clserpp
@@ -24,6 +24,8 @@ option(CLSER_LIBRARY_NAMES
 option(CLSER_LIBRARY_PATHS
 	   "Additional path to find the manufacturer provided clser library" ""
 )
+
+option(CLSERPP_BUILD_TOOLS "Build tools for clserpp" On)
 
 find_library(
 	CLSER_LIBRARY ${CLSER_LIBRARY_NAME}
@@ -57,7 +59,8 @@ if(NOT CLSERPP_IMPORTED)
 	# settings
 	set(gtest_force_shared_crt
 		ON
-		CACHE BOOL "" FORCE
+		CACHE BOOL "
+	" FORCE
 	)
 
 	FetchContent_MakeAvailable(googletest)
@@ -69,3 +72,7 @@ if(NOT CLSERPP_IMPORTED)
 endif()
 
 add_subdirectory(src/fort/clserpp)
+
+if(CLSERPP_BUILD_TOOLS)
+	add_subdirectory(src/fort/clserpp-repl)
+endif()

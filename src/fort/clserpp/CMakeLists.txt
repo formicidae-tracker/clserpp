@@ -1,17 +1,18 @@
 # SPDX-License-Identifier: LGPGL-3.0-or-later
 
 set(HDR_FILES clser.h clserpp.hpp details.hpp)
-set(SRC_FILES clserpp.cpp)
 set(TEST_SRC_FILES test.cpp)
 set(TEST_HDR_FILES)
-add_library(clserpp ${SRC_FILES} ${HDR_FILES})
-target_link_libraries(clserpp ${CLSER_LIBRARY} cpptrace::cpptrace)
+
+add_library(clserpp SHARED ${SRC_FILES} ${HDR_FILES})
+
+target_link_libraries(clserpp PUBLIC cpptrace::cpptrace)
+target_link_libraries(clserpp INTERFACE ${CLSER_LIBRARY})
 
 if(CLSERPP_IMPORTED)
 	add_library(fort-clserpp::clserpp INTERFACE IMPORTED GLOBAL)
 	target_link_libraries(
-		fort-clserpp::clserpp INTERFACE clserpp ${CLSER_LIBRARY}
-										cpptrace::cpptrace
+		fort-clserpp::clserpp INTERFACE clserpp cpptrace::cpptrace
 	)
 	target_include_directories(
 		fort-clserpp::clserpp INTERFACE ${PROJECT_SOURCE_DIR}/src
