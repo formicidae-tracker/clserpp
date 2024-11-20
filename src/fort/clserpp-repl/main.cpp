@@ -60,6 +60,7 @@ void execute(int argc, char **argv) {
 		std::cerr << "sending '" << out << "'" << std::endl;
 
 		serial->WriteAll(out, 1000);
+		serial->Flush();
 		try {
 
 			serial->ReadLine(res);
