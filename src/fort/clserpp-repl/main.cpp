@@ -38,16 +38,22 @@ void execute(int argc, char **argv) {
 	serial->SetBaudrate(baudrates[bdIdx]);
 
 	while (true) {
+		while (serial->ByteAvailable() > 0) {
+			std::string input('x', serial->ByteAvailable());
+			serial->ReadAll(input, 1000);
+			std::cout << "<<< " << input << std::endl;
+		}
+
 		std::string res;
 		line.clear();
-		std::cout << "<<< " << std::flush;
+		std::cout << ">>> " << std::flush;
 		if (!std::getline(std::cin, line)) {
 			break;
 		}
 		std::cerr << "sending '" << line << "'" << std::endl;
 		serial->WriteAll(line, 1000);
 		serial->ReadLine(res);
-		std::cout << ">>> " << res << std::endl;
+		std::cout << "<<< " << res << std::endl;
 	}
 }
 

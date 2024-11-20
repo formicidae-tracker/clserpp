@@ -76,8 +76,8 @@ public:
 	void ReadAll(std::string &buf, uint32_t timeout_ms) {
 		buf.clear();
 		uint32_t read = 0;
-		while (read < buf.capacity()) {
-			uint32_t size = buf.capacity() - read;
+		while (read < buf.size()) {
+			uint32_t size = buf.size() - read;
 			details::call(
 			    clSerialRead,
 			    d_serial,
@@ -89,7 +89,6 @@ public:
 				throw IOTimeout();
 			}
 			read += size;
-			buf.resize(read);
 		}
 	}
 
