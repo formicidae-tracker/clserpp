@@ -24,8 +24,16 @@ struct ManufacturerInfo {
 
 class IOTimeout : public cpptrace::runtime_error {
 public:
-	IOTimeout(uint32_t bytes)
-	    : cpptrace::runtime_error("timouted after " + std::to_string(bytes)) {}
+	IOTimeout(uint32_t bytes) noexcept
+	    : cpptrace::runtime_error{"timouted after " + std::to_string(bytes)}
+	    , d_bytes{bytes} {}
+
+	uint32_t bytes() const noexcept {
+		return d_bytes;
+	}
+
+private:
+	uint32_t d_bytes;
 };
 
 class Serial {
@@ -87,6 +95,9 @@ public:
 				    timeout_ms
 				);
 			} catch (const details::clserException &e) {
+				if (e.code() == -10004) {
+					throw IOTimeout(read);
+				}
 				throw;
 			}
 			if (size == 0) {
@@ -110,6 +121,9 @@ public:
 				    timeout_ms
 				);
 			} catch (const details::clserException &e) {
+				if (e.code() == -10004) {
+					throw IOTimeout(written);
+				}
 				throw;
 			}
 
@@ -135,6 +149,10 @@ public:
 				    timeout_ms
 				);
 			} catch (const details::clserException &e) {
+				if (e.code() == -10004) {
+					throw IOTimeout(read);
+				}
+
 				throw;
 			}
 

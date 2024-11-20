@@ -18,7 +18,12 @@ public:
 	    : cpptrace::runtime_error(
 	          "clser error (" + std::to_string(code) +
 	          "): " + getErrorText(code)
-	      ) {}
+	      )
+	    , d_code{code} {}
+
+	int32_t code() const noexcept {
+		return d_code;
+	}
 
 private:
 	std::string getErrorText(int32_t code) {
@@ -31,6 +36,8 @@ private:
 		}
 		return buffer;
 	}
+
+	int32_t d_code;
 };
 
 template <typename Fnct, typename... Args>

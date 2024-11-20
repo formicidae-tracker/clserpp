@@ -104,7 +104,10 @@ void execute(int argc, char **argv) {
 
 			serial->ReadLine(res);
 		} catch (const IOTimeout &e) {
-			std::cerr << "got error" << e.what() << std::endl;
+			std::cerr << "timeout: " << e.what() << std::endl;
+			if (e.bytes() > 0) {
+				std::cerr << res << std::endl;
+			}
 			continue;
 		}
 		std::cout << "<<< " << res << std::endl;
