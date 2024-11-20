@@ -1,9 +1,56 @@
 #include <cpptrace/exceptions.hpp>
 #include <cpptrace/utils.hpp>
 #include <fort/clserpp/clserpp.hpp>
+#include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <string>
+
 using namespace fort::clserpp;
+
+class Buffer : public std::vector<char> {
+public:
+	Buffer(size_t i)
+	    : std::vector<char>('.', i) {}
+};
+
+Buffer::const_iterator print4Bytes(
+    std::ostream                 &out,
+    const Buffer::const_iterator &start,
+    Buffer::const_iterator        end
+) {
+	end = std::min(end, start + 4);
+
+	for (auto c = start; c != end; ++c) {
+		out << std::hex << std::setw(2) << int(*c);
+	}
+	for (int rem = 4 - std::distance(start, end); rem > 0; --rem) {
+		out << "  ";
+	}
+	return end;
+}
+
+std::ostream &operator<<(std::ostream &out, const Buffer &buf) {
+	out << "buffer " << buf.size() << " bytes" << std::endl;
+	auto flags = out.flags();
+
+	for (auto current = buf.cbegin(); current != buf.cend();) {
+		std::string ascii(current, std::min(current + 32, buf.cend()));
+		out << std::dec << std::setw(4) << std::setfill('0')
+		    << std::distance(buf.cbegin(), current) << " ";
+		current = print4Bytes(out, current, buf.cend());
+		out << " ";
+		current = print4Bytes(out, current, buf.cend());
+		out << " . ";
+		current = print4Bytes(out, current, buf.cend());
+		out << " ";
+		current = print4Bytes(out, current, buf.cend());
+		out << " | " << ascii << std::endl;
+	}
+	out.flags(flags);
+
+	return out;
+}
 
 void execute(int argc, char **argv) {
 	std::cout << "clserpp-repl" << std::endl;
@@ -38,10 +85,11 @@ void execute(int argc, char **argv) {
 	serial->SetBaudrate(baudrates[bdIdx]);
 
 	while (true) {
+		serial->Flush();
 		while (serial->ByteAvailable() > 0) {
-			std::string input('x', serial->ByteAvailable());
-			serial->ReadAll(input, 1000);
-			std::cout << "<<< " << input << std::endl;
+			Buffer data(serial->ByteAvailable());
+			serial->ReadAll(data, 1000);
+			std::cout << "<<< " << data << std::endl;
 		}
 
 		std::string res;
