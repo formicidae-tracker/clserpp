@@ -37,7 +37,10 @@ int32_t clSerialRead(
 );
 
 int32_t clSerialWrite(
-    clSerialRef_t serial, char *buffer, uint32_t *size, uint32_t timeout_ms
+    clSerialRef_t serial,
+    const char   *buffer,
+    uint32_t     *size,
+    uint32_t      timeout_ms
 );
 
 // this is not conventional but work in my use case mvHyperion

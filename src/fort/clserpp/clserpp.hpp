@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clser.h"
+#include <cpptrace/exceptions.hpp>
 #include <memory>
 #include <vector>
 
@@ -17,6 +18,12 @@ struct SerialDescription {
 struct ManufacturerInfo {
 	std::string name;
 	std::string version;
+};
+
+class IOTimeout : cpptrace::runtime_error {
+public:
+	IOTimeout()
+	    : cpptrace::runtime_error("timouted") {}
 };
 
 class Serial {
@@ -38,8 +45,8 @@ public:
 
 		std::vector<SerialDescription> res(size);
 		for (uint32_t i = 0; i < size; i++) {
-			char     buffer[2000];
-			uint32_t size = 2000;
+			char     buffer[DefaultBufferSize];
+			uint32_t size = DefaultBufferSize;
 			details::call(clGetSerialPortIdentifier, i, buffer, &size);
 			res[i] = {.index = i, .info = buffer};
 		}
@@ -47,8 +54,8 @@ public:
 	}
 
 	static ManufacturerInfo GetManufacturerInfos() {
-		char     buffer[2000];
-		uint32_t size = 2000;
+		char     buffer[DefaultBufferSize];
+		uint32_t size = DefaultBufferSize;
 		uint32_t version;
 		details::call(clGetManufacturerInfo, buffer, &size, &version);
 		return {
@@ -60,8 +67,79 @@ public:
 		clSerialClose(d_serial);
 	}
 
+	void Flush() const {
+		details::call(clFlushPort, d_serial);
+	}
+
+	void ReadAll(std::string &buf, uint32_t timeout_ms) {
+		buf.clear();
+		uint32_t read = 0;
+		while (read < buf.capacity()) {
+			uint32_t size = buf.capacity() - read;
+			details::call(
+			    clSerialRead,
+			    d_serial,
+			    &buf[read],
+			    &size,
+			    timeout_ms
+			);
+			if (size == 0) {
+				throw IOTimeout();
+			}
+			read += size;
+			buf.resize(read);
+		}
+	}
+
+	void WriteAll(const std::string &buf, uint32_t timeout_ms) {
+		uint32_t written = 0;
+		while (written < buf.size()) {
+			uint32_t size = buf.size() - written;
+			details::call(
+			    clSerialWrite,
+			    d_serial,
+			    &buf[written],
+			    &size,
+			    timeout_ms
+			);
+			if (size == 0) {
+				throw IOTimeout();
+			}
+			written += size;
+		}
+	}
+
+	void
+	ReadLine(std::string &buf, char delim = '\n', uint32_t timeout_ms = 100) {
+		buf.clear();
+		buf.reserve(DefaultBufferSize);
+		uint32_t read = 0;
+		while (read < DefaultBufferSize) {
+			uint32_t size = DefaultBufferSize - read;
+			details::call(
+			    clSerialRead,
+			    d_serial,
+			    &buf[read],
+			    &size,
+			    timeout_ms
+			);
+			if (size == 0) {
+				throw IOTimeout();
+			}
+
+			read += size;
+			buf.resize(read);
+
+			if (buf.find(delim) != std::string::npos) {
+				return;
+			}
+		}
+	}
+
 private:
-	Serial(uint32_t idx) {}
+	Serial(uint32_t idx) {
+		details::call(clSerialInit, idx, &d_serial);
+	}
 
 	Serial(const Serial &other)            = delete;
 	Serial &operator=(const Serial &other) = delete;
@@ -69,6 +147,8 @@ private:
 	Serial &operator=(Serial &&other)      = delete;
 
 	void *d_serial = nullptr;
+
+	const static uint32_t DefaultBufferSize = 300;
 };
 } // namespace clserpp
 } // namespace fort
