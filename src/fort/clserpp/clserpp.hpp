@@ -73,8 +73,8 @@ public:
 		details::call(clFlushPort, d_serial);
 	}
 
-	void ReadAll(std::string &buf, uint32_t timeout_ms) {
-		buf.clear();
+	template <typename Container>
+	void ReadAll(Container &buf, uint32_t timeout_ms) {
 		uint32_t read = 0;
 		while (read < buf.size()) {
 			uint32_t size = buf.size() - read;
@@ -92,7 +92,8 @@ public:
 		}
 	}
 
-	void WriteAll(const std::string &buf, uint32_t timeout_ms) {
+	template <typename Container>
+	void WriteAll(const Container &buf, uint32_t timeout_ms) {
 		uint32_t written = 0;
 		while (written < buf.size()) {
 			uint32_t size = buf.size() - written;
@@ -110,10 +111,9 @@ public:
 		}
 	}
 
+	template <typename Container>
 	void
-	ReadLine(std::string &buf, char delim = '\n', uint32_t timeout_ms = 100) {
-		buf.clear();
-		buf.reserve(DefaultBufferSize);
+	ReadLine(Container &buf, char delim = '\n', uint32_t timeout_ms = 1000) {
 		uint32_t read = 0;
 		while (read < DefaultBufferSize) {
 			uint32_t size = DefaultBufferSize - read;
@@ -131,7 +131,8 @@ public:
 			read += size;
 			buf.resize(read);
 
-			if (buf.find(delim) != std::string::npos) {
+			if (std::find(buf.begin(), buf.begin() + read, delim) !=
+			    buf.begin() + read) {
 				return;
 			}
 		}
