@@ -95,6 +95,12 @@ void execute(int argc, char **argv) {
 
 	auto buffer      = ReadBuffer<Serial>{serial};
 	auto termination = details::termination_cast(opts.termination).value();
+	auto delim       = delims.at(size_t(termination));
+
+	if (opts.verbose) {
+		std::cerr << "Using delim '" << delim << "'" << std::endl;
+	}
+
 	std::string line;
 	while (true) {
 		serial->Flush();
