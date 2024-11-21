@@ -54,7 +54,7 @@ public:
 		while (true) {
 			bool timeouted = false;
 
-			size_t              segmentRead = 2;
+			size_t              segmentRead = 20;
 			details::BufferView segment{d_buffer, d_read, d_read + segmentRead};
 
 			try {
@@ -66,14 +66,13 @@ public:
 				timeouted   = true;
 				segmentRead = timeout.bytes();
 			}
-
 			const auto end = segment.d_begin + segmentRead;
 			const auto pos = std::find(segment.d_begin, end, delim);
 
 			if (pos != end) {
-				std::string res{d_buffer.begin(), pos};
-				std::copy(pos, end, d_buffer.begin());
-				d_read = std::distance(pos, end);
+				std::string res{d_buffer.begin(), pos + 1};
+				std::copy(pos + 1, end, d_buffer.begin());
+				d_read = std::distance(pos + 1, end);
 				return res;
 			} else {
 				d_read += segmentRead;
@@ -91,7 +90,7 @@ public:
 private:
 	std::shared_ptr<Reader> d_reader = nullptr;
 
-	clserpp::Buffer d_buffer = clserpp::Buffer{2000};
+	clserpp::Buffer d_buffer = clserpp::Buffer{4096};
 	size_t d_read   = 0;
 };
 } // namespace clserpp

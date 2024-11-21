@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPGL-3.0-or-later
 
 set(HDR_FILES clser.h clserpp.hpp details.hpp)
-set(TEST_SRC_FILES test.cpp)
+set(TEST_SRC_FILES buffer.cpp read_buffer.cpp)
 set(TEST_HDR_FILES)
 
 add_library(clserpp SHARED ${SRC_FILES} ${HDR_FILES})

@@ -56,7 +56,8 @@ public:
 } // namespace clserpp
 } // namespace fort
 
-std::ostream &operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
+inline std::ostream &
+operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
 	using namespace fort::clserpp;
 	static const auto print4Bytes = [](std::ostream                 &out,
 	                                   const Buffer::const_iterator &start,
