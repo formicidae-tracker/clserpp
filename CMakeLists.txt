@@ -46,7 +46,13 @@ FetchContent_Declare(
 	GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
 	GIT_TAG v0.7.3
 )
-FetchContent_MakeAvailable(cpptrace)
+FetchContent_Declare(
+	argparse
+	GIT_REPOSITORY https://github.com/morrisfranken/argparse/
+	GIT_TAG 015de6adee287917a9ee10afcbfcb8e560f4d9aa
+)
+
+FetchContent_MakeAvailable(cpptrace argparse)
 
 if(NOT CLSERPP_IMPORTED)
 
