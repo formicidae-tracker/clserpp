@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cctype>
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -199,26 +201,67 @@ std::ostream &operator<<(std::ostream &out, clBaudrate_e e) {
 
 std::ostream &operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
 	using namespace fort::clserpp;
-	auto print4Bytes = [](std::ostream                 &out,
-	                      const Buffer::const_iterator &start,
-	                      Buffer::const_iterator        end
-	                   ) -> Buffer::const_iterator {
+	static const auto print4Bytes = [](std::ostream                 &out,
+	                                   const Buffer::const_iterator &start,
+	                                   Buffer::const_iterator        end
+	                                ) -> Buffer::const_iterator {
 		end = std::min(end, start + 4);
 
 		for (auto c = start; c != end; ++c) {
-			out << std::hex << std::setw(2) << int(*c);
+			out << std::hex << std::setw(2) << (int)(*c & 0xff);
 		}
 		for (int rem = 4 - std::distance(start, end); rem > 0; --rem) {
 			out << "  ";
 		}
 		return end;
 	};
+
+	static const auto print16BytesAscii =
+	    [](std::ostream                 &out,
+	       const Buffer::const_iterator &start,
+	       const Buffer::const_iterator &end) {
+		    struct EscapableChar {
+			public:
+			    char        value;
+			    const char *escaped;
+		    };
+
+		    const std::array<EscapableChar, 2> escapables = {
+		        EscapableChar{.value = '\r', .escaped = "\\r"},
+		        EscapableChar{.value = '\n', .escaped = "\\n"},
+		    };
+		    for (auto iter = start; iter != end; ++iter) {
+			    if (std::isprint(*iter)) {
+				    out << char(*iter);
+				    continue;
+			    }
+			    auto pos = std::find_if(
+
+			        escapables.begin(),
+			        escapables.end(),
+			        [v = *iter](const EscapableChar &c) { return c.value == v; }
+			    );
+
+			    if (pos != escapables.end()) {
+				    out << pos->escaped;
+				    continue;
+			    }
+
+			    out << "\\x" << std::dec << (int)(*iter & 0xff);
+		    }
+
+		    int left = std::distance(start, end) - 16;
+		    if (left > 0) {
+			    out << std::string(left, ' ');
+		    }
+	    };
+
 	auto flags = out.flags();
 
 	out << "buffer " << buf.size() << " bytes:" << std::endl;
 
 	for (auto current = buf.cbegin(); current != buf.cend();) {
-		std::string ascii(current, std::min(current + 16, buf.cend()));
+		auto linestart = current;
 		out << std::right << std::dec << std::setw(4) << std::setfill('0')
 		    << std::distance(buf.cbegin(), current) << " | ";
 
@@ -229,8 +272,9 @@ std::ostream &operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
 		current = print4Bytes(out, current, buf.cend());
 		out << " ";
 		current = print4Bytes(out, current, buf.cend());
-		out << " | " << std::left << std::setw(16) << std::setfill(' ') << ascii
-		    << std::endl;
+		out << " | ";
+		print16BytesAscii(out, linestart, std::min(linestart + 16, buf.cend()));
+		out << std::endl;
 	}
 	out.flags(flags);
 

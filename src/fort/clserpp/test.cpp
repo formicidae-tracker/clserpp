@@ -12,7 +12,7 @@ TEST(Buffer, Formatting) {
 	EXPECT_EQ(
 	    out.str(),
 	    "buffer 4 bytes:\n"
-	    "0000 | 2e2e2e2e          .                   | ....            \n"
+	    "0000 | 2e2e2e2e          .                   | ....\n"
 	);
 }
 
@@ -27,6 +27,23 @@ TEST(Buffer, FormattingString) {
 	    "buffer 35 bytes:\n"
 	    "0000 | 48656c6c 6f20776f . 726c6421 21205468 | Hello world!! Th\n"
 	    "0016 | 69732069 73206120 . 6e657720 62756666 | is is a new buff\n"
-	    "0032 | 65722e            .                   | er.             \n"
+	    "0032 | 65722e            .                   | er.\n"
+	);
+}
+
+TEST(Buffer, FormattingNonPrintableCharacter) {
+
+	std::ostringstream out;
+
+	fort::clserpp::Buffer buf{4};
+	buf[0] = '\r';
+	buf[1] = '\n';
+	buf[2] = 0;
+	buf[3] = 0xaf;
+	out << buf;
+	EXPECT_EQ(
+	    out.str(),
+	    "buffer 4 bytes:\n"
+	    "0000 | 0d0a00af          .                   | \\r\\n\\x0\\x175\n"
 	);
 }

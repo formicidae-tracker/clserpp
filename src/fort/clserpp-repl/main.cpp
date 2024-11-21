@@ -15,11 +15,22 @@
 
 using namespace fort::clserpp;
 
+enum class LineTermination {
+	NONE     = 0,
+	LF       = 1,
+	CR       = 2,
+	CLRF     = 3,
+	NULLCHAR = 4,
+};
+
 struct Opts : public argparse::Args {
 	int &baudrate = kwarg("b,baudrate", "Baudrate to use").set_default(19200);
 	int &interface =
 	    kwarg("i,idx", "Interface to use, negative values ask for prompt")
 	        .set_default(-1);
+	LineTermination &termination =
+	    kwarg("t,termination", "Line termination to use")
+	        .set_default(LineTermination::NONE);
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {
@@ -45,7 +56,7 @@ std::string enumerateBaudrates(const std::vector<clBaudrate_e> &baudrates) {
 	std::string        prefix{"{"};
 	std::ostringstream oss;
 	for (const auto &b : baudrates) {
-		oss << prefix << b;
+		oss << prefix << std::string(magic_enum::enum_name(b)).substr(12);
 		prefix = ", ";
 	}
 	oss << "}";
