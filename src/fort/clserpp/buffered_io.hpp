@@ -78,22 +78,26 @@ public:
 		bool timeouted = false;
 
 		while (true) {
+			// test if we can send back data
 			const auto pos = std::find(d_head, d_tail, delim);
 			if (pos != d_tail) {
 				std::string res{d_head, pos + 1};
 				d_head = pos + 1;
-				if (std::distance(d_tail, d_buffer.end()) < segmentRead &&
-				    d_head != d_buffer.begin()) {
-					size_t available = std::distance(d_head, d_tail);
-					std::copy(d_head, d_tail, d_buffer.begin());
-					d_head = d_buffer.begin();
-					d_tail = d_head + available;
-				}
 				return res;
 			} else if (timeouted) {
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
+			// make room if possible
+			if (std::distance(d_tail, d_buffer.end()) < segmentRead &&
+			    d_head != d_buffer.begin()) {
+				size_t available = std::distance(d_head, d_tail);
+				std::copy(d_head, d_tail, d_buffer.begin());
+				d_head = d_buffer.begin();
+				d_tail = d_head + available;
+			}
+
+			// read more if possible
 			details::BufferView segment{d_buffer, d_tail, d_tail + segmentRead};
 
 			try {
