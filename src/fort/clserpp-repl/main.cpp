@@ -1,5 +1,4 @@
-#include "fort/clserpp/clser.h"
-#include "magic_enum/magic_enum.hpp"
+#include "fort/clserpp/buffered_io.hpp"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -11,6 +10,7 @@
 
 #include <argparse/argparse.hpp>
 
+#include <fort/clserpp/buffer.hpp>
 #include <fort/clserpp/clserpp.hpp>
 
 using namespace fort::clserpp;
@@ -77,10 +77,21 @@ void setupBaudrate(Serial &serial, int baudrate) {
 }
 
 void execute(int argc, char **argv) {
+	static std::array<char, 5> delims = {
+	    '\n',
+	    '\r',
+	    '\n',
+	    '\n',
+	    0,
+	};
+
 	auto opts = argparse::parse<Opts>(argc, argv);
 
-	auto serial = openInterface(opts.interface);
+	auto serial =
+	    std::shared_ptr<Serial>(std::move(openInterface(opts.interface)));
 	setupBaudrate(*serial, opts.baudrate);
+
+	auto buffer = ReadBuffer<Serial>{serial};
 
 	std::string line;
 	while (true) {
@@ -93,7 +104,6 @@ void execute(int argc, char **argv) {
 			}
 		}
 
-		Buffer res{1000};
 		line.clear();
 		std::cout << ">>> " << std::flush;
 		if (!std::getline(std::cin, line)) {
@@ -108,15 +118,17 @@ void execute(int argc, char **argv) {
 		serial->Write(out, 1000);
 		serial->Flush();
 		try {
-			serial->Read(res, 1000);
+			std::string res =
+			    buffer.ReadLine(1000, delims.at(size_t(opts.termination)));
+
+			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
 			std::cerr << "timeout: " << e.what() << std::endl;
 			if (e.bytes() > 0) {
-				std::cerr << res << std::endl;
+				std::cerr << buffer.Buffer();
 			}
 			continue;
 		}
-		std::cout << "<<< " << res << std::endl;
 	}
 }
 
