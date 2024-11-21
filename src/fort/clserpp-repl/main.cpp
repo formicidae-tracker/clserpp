@@ -137,6 +137,10 @@ void execute(int argc, char **argv) {
 			}
 			continue;
 		}
+
+		if (opts.verbose) {
+			std::cerr << buffer.Buffer();
+		}
 	}
 }
 
