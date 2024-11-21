@@ -47,12 +47,18 @@ FetchContent_Declare(
 	GIT_TAG v0.7.3
 )
 FetchContent_Declare(
+	magic_enum
+	GIT_REPOSITORY https://github.com/Neargye/magic_enum
+	GIT_TAG v0.9.7
+)
+
+FetchContent_Declare(
 	argparse
 	GIT_REPOSITORY https://github.com/morrisfranken/argparse/
 	GIT_TAG 015de6adee287917a9ee10afcbfcb8e560f4d9aa
 )
 
-FetchContent_MakeAvailable(cpptrace argparse)
+FetchContent_MakeAvailable(cpptrace argparse magic_enum)
 
 if(NOT CLSERPP_IMPORTED)
 

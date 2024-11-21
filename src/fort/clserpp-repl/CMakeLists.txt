@@ -5,4 +5,4 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 
 add_executable(clserpp-repl ${SRC_FILES} ${HDR_FILES})
 
-target_link_libraries(clserpp-repl clserpp)
+target_link_libraries(clserpp-repl clserpp morrisfranken::argparse)
