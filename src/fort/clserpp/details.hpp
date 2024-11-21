@@ -2,6 +2,7 @@
 
 #include "clser.h"
 #include <cpptrace/exceptions.hpp>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -46,6 +47,74 @@ void call(Fnct &&fnct, Args &&...args) {
 	if (res != 0) {
 		throw clserException(res);
 	}
+}
+
+inline const char *version_name(clVersion_e e) {
+	switch (e) {
+	case CL_VERSION_NONE:
+		return "CL_VERSION_NONE";
+	case CL_VERSION_1_0:
+		return "CL_VERSION_1_0";
+	case CL_VERSION_1_1:
+		return "CL_VERSION_1_1";
+	default:
+		throw cpptrace::out_of_range(
+		    "Unknown baudrate value " + std::to_string(int(e))
+		);
+	}
+}
+
+inline const char *baudrate_name(clBaudrate_e e) {
+	switch (e) {
+	case CL_BAUDRATE_9600:
+		return " CL_BAUDRATE_9600";
+	case CL_BAUDRATE_19200:
+		return "CL_BAUDRATE_19200";
+	case CL_BAUDRATE_38400:
+		return "CL_BAUDRATE_38400";
+	case CL_BAUDRATE_57600:
+		return "CL_BAUDRATE_57600";
+	case CL_BAUDRATE_115200:
+		return "CL_BAUDRATE_115200";
+	case CL_BAUDRATE_230400:
+		return "CL_BAUDRATE_230400";
+	case CL_BAUDRATE_460800:
+		return "CL_BAUDRATE_460800";
+	case CL_BAUDRATE_921600:
+		return "CL_BAUDRATE_921600";
+	default:
+		throw cpptrace::out_of_range(
+		    "Unknown baudrate value " + std::to_string(int(e))
+		);
+	}
+}
+
+inline std::optional<clBaudrate_e> baudrate_cast(const std::string &bd) {
+	if (bd == "CL_BAUDRATE_9600") {
+		return CL_BAUDRATE_9600;
+	}
+	if (bd == "CL_BAUDRATE_19200") {
+		return CL_BAUDRATE_19200;
+	}
+	if (bd == "CL_BAUDRATE_38400") {
+		return CL_BAUDRATE_38400;
+	}
+	if (bd == "CL_BAUDRATE_57600") {
+		return CL_BAUDRATE_57600;
+	}
+	if (bd == "CL_BAUDRATE_115200") {
+		return CL_BAUDRATE_115200;
+	}
+	if (bd == "CL_BAUDRATE_230400") {
+		return CL_BAUDRATE_230400;
+	}
+	if (bd == "CL_BAUDRATE_460800") {
+		return CL_BAUDRATE_460800;
+	}
+	if (bd == "CL_BAUDRATE_921600") {
+		return CL_BAUDRATE_921600;
+	}
+	return std::nullopt;
 }
 
 } // namespace details

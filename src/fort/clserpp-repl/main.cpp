@@ -1,4 +1,5 @@
 #include "fort/clserpp/buffered_io.hpp"
+#include "fort/clserpp/details.hpp"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -50,7 +51,7 @@ std::string enumerateBaudrates(const std::vector<clBaudrate_e> &baudrates) {
 	std::string        prefix{"{"};
 	std::ostringstream oss;
 	for (const auto &b : baudrates) {
-		oss << prefix << std::string(magic_enum::enum_name(b)).substr(12);
+		oss << prefix << std::string(details::baudrate_name(b)).substr(12);
 		prefix = ", ";
 	}
 	oss << "}";
@@ -58,9 +59,7 @@ std::string enumerateBaudrates(const std::vector<clBaudrate_e> &baudrates) {
 }
 
 void setupBaudrate(Serial &serial, int baudrate) {
-	auto e = magic_enum::enum_cast<clBaudrate_e>(
-	    "CL_BAUDRATE_" + std::to_string(baudrate)
-	);
+	auto e = details::baudrate_cast("CL_BAUDRATE_" + std::to_string(baudrate));
 
 	const auto supported = serial.SupportedBaudrates();
 

@@ -46,11 +46,6 @@ FetchContent_Declare(
 	GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
 	GIT_TAG v0.7.3
 )
-FetchContent_Declare(
-	magic_enum
-	GIT_REPOSITORY https://github.com/Neargye/magic_enum
-	GIT_TAG v0.9.7
-)
 
 FetchContent_Declare(
 	argparse
@@ -58,7 +53,7 @@ FetchContent_Declare(
 	GIT_TAG a0860ba700100c0f192ccb5e3be2d4f670e9a958
 )
 
-FetchContent_MakeAvailable(cpptrace argparse magic_enum)
+FetchContent_MakeAvailable(cpptrace argparse)
 
 if(NOT CLSERPP_IMPORTED)
 

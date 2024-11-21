@@ -5,8 +5,6 @@
 
 #include <cpptrace/exceptions.hpp>
 
-#include <magic_enum/magic_enum.hpp>
-
 #include "clser.h"
 
 #include "details.hpp"
@@ -59,7 +57,7 @@ public:
 		details::call(clGetManufacturerInfo, buffer, &size, &version);
 		return {
 		    .name    = buffer,
-		    .version = std::string{magic_enum::enum_name(clVersion_e(version))},
+		    .version = std::string{details::version_name(clVersion_e(version))},
 		};
 	}
 
@@ -167,5 +165,5 @@ private:
 } // namespace fort
 
 std::ostream &operator<<(std::ostream &out, clBaudrate_e e) {
-	return out << magic_enum::enum_name(e);
+	return out << fort::clserpp::details::baudrate_name(e);
 }
