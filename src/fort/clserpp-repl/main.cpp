@@ -1,7 +1,9 @@
 #include "fort/clserpp/clser.h"
+#include "magic_enum/magic_enum.hpp"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 #include <string>
 
 #include <cpptrace/exceptions.hpp>
@@ -14,46 +16,68 @@
 using namespace fort::clserpp;
 
 struct Opts : public argparse::Args {
-	clBaudrate_e &baudrate =
-	    kwarg("b,baudrate", "Baudrate to use").set_default(CL_BAUDRATE_19200);
-	int &interface = kwarg("i,idx"
+	int &baudrate = kwarg("b,baudrate", "Baudrate to use").set_default(19200);
+	int &interface =
+	    kwarg("i,idx", "Interface to use, negative values ask for prompt")
+	        .set_default(-1);
 };
 
-void execute(int argc, char **argv) {
-	auto args = argparse::parse<Opts>(argc, argv);
-	args.print();
+std::unique_ptr<Serial> openInterface(int interface) {
+	if (interface < 0) {
+		std::cout << "Available interfaces:" << std::endl;
+		const auto descriptions = Serial::GetDescriptions();
+		if (descriptions.size() == 0) {
+			throw cpptrace::runtime_error("No interfaces found");
+		}
+		for (const auto &desc : descriptions) {
+			std::cout << "[" << desc.index << "]: " << desc.info << std::endl;
+		}
 
-	std::cout << "clserpp-repl" << std::endl;
-	const auto descriptions = Serial::GetDescriptions();
-	if (descriptions.size() == 0) {
-		throw cpptrace::runtime_error("No interfaces found");
+		std::cout << "Please choose an interface:" << std::endl;
+		std::string line;
+		std::getline(std::cin, line);
+		interface = std::stoi(line);
 	}
-	for (const auto &desc : descriptions) {
-		std::cout << "[" << desc.index << "]: " << desc.info << std::endl;
-	}
+	return Serial::Open(interface);
+}
 
-	std::cout << "Please choose an interface:" << std::endl;
-	std::string line;
-	std::getline(std::cin, line);
-	size_t idx    = std::stoi(line);
-	auto   serial = Serial::Open(idx);
-
-	const auto baudrates = serial->SupportedBaudrates();
-	std::cout << "Supported Baudrate for " << descriptions[idx].info
-	          << std::endl;
-	for (size_t i = 0; i < baudrates.size(); ++i) {
-		std::cout << "[" << i << "]: " << baudrates[i] << std::endl;
+std::string enumerateBaudrates(const std::vector<clBaudrate_e> &baudrates) {
+	std::string        prefix{"{"};
+	std::ostringstream oss;
+	for (const auto &b : baudrates) {
+		oss << prefix << b;
+		prefix = ", ";
 	}
-	std::cout << "Please choose a baudrate: " << std::endl;
-	std::getline(std::cin, line);
-	size_t bdIdx = std::stoi(line);
-	if (bdIdx >= baudrates.size()) {
-		throw cpptrace::invalid_argument(
-		    "Invalid index " + std::to_string(bdIdx)
+	oss << "}";
+	return oss.str();
+}
+
+void setupBaudrate(Serial &serial, int baudrate) {
+	auto e = magic_enum::enum_cast<clBaudrate_e>(
+	    "CL_BAUDRATE_" + std::to_string(baudrate)
+	);
+
+	const auto supported = serial.SupportedBaudrates();
+
+	if (e.has_value() == false ||
+	    std::find(supported.begin(), supported.end(), e.value()) ==
+	        supported.end()) {
+		throw cpptrace::runtime_error(
+		    "Unsupported baudrate " + std::to_string(baudrate) +
+		    ". Supported values are: " + enumerateBaudrates(supported)
 		);
 	}
-	serial->SetBaudrate(baudrates[bdIdx]);
 
+	serial.SetBaudrate(e.value());
+}
+
+void execute(int argc, char **argv) {
+	auto opts = argparse::parse<Opts>(argc, argv);
+
+	auto serial = openInterface(opts.interface);
+	setupBaudrate(*serial, opts.baudrate);
+
+	std::string line;
 	while (true) {
 		serial->Flush();
 		while (serial->ByteAvailable() > 0) {
