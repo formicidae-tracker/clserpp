@@ -29,6 +29,20 @@ public:
 		d_end   = buf.begin() + end;
 	}
 
+	BufferView(Buffer &buf, Buffer::iterator begin, Buffer::iterator end)
+	    : d_begin{begin}
+	    , d_end{end} {
+
+		if (end < begin || begin > buf.end() || end > buf.end()) {
+			throw cpptrace::logic_error(
+			    "invalid buffer view [" +
+			    std::to_string(std::distance(buf.begin(), begin)) + ", " +
+			    std::to_string(std::distance(buf.begin(), end)) +
+			    "[ for buffer of size " + std::to_string(buf.size())
+			);
+		}
+	}
+
 	char &operator[](size_t i) {
 		return *(d_begin + i);
 	}
@@ -50,40 +64,45 @@ public:
 		}
 	};
 
-	bool HasByte() const {
-		return d_read > 0 || d_reader->ByteAvailable() > 0;
+	bool BytesAvailable() const {
+		return std::distance(
+		           d_buffer.begin(),
+		           clserpp::Buffer::const_iterator{d_tail}
+		       ) + d_reader->BytesAvailable() >
+		       0;
 	}
 
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
-		while (true) {
-			bool timeouted = false;
+		static const size_t segmentRead = 20;
 
-			size_t              segmentRead = 20;
-			details::BufferView segment{d_buffer, d_read, d_read + segmentRead};
+		bool timeouted = false;
+
+		while (true) {
+			const auto pos = std::find(d_head, d_tail, delim);
+			if (pos != d_tail) {
+				std::string res{d_head, pos + 1};
+				d_head = pos + 1;
+				if (std::distance(d_tail, d_buffer.end()) < segmentRead &&
+				    d_head != d_buffer.begin()) {
+					size_t available = std::distance(d_head, d_tail);
+					std::copy(d_head, d_tail, d_buffer.begin());
+					d_head = d_buffer.begin();
+					d_tail = d_head + available;
+				}
+				return res;
+			} else if (timeouted) {
+				throw IOTimeout(std::distance(d_head, d_tail));
+			}
+
+			details::BufferView segment{d_buffer, d_tail, d_tail + segmentRead};
 
 			try {
 				d_reader->Read(segment, timeout_ms);
+				d_tail += segmentRead;
+				timeouted = false;
 			} catch (const IOTimeout &timeout) {
-				if (timeout.bytes() == 0) {
-					throw;
-				}
-				timeouted   = true;
-				segmentRead = timeout.bytes();
-			}
-			const auto end = segment.d_begin + segmentRead;
-			const auto pos = std::find(segment.d_begin, end, delim);
-
-			if (pos != end) {
-
-				std::string res{d_buffer.begin(), pos + 1};
-				std::copy(pos + 1, end, d_buffer.begin());
-				d_read = std::distance(pos + 1, end);
-				return res;
-			} else {
-				d_read += segmentRead;
-				if (timeouted) {
-					throw IOTimeout(d_read);
-				}
+				timeouted = true;
+				d_tail += timeout.bytes();
 			}
 		}
 	}
@@ -95,8 +114,9 @@ public:
 private:
 	std::shared_ptr<Reader> d_reader = nullptr;
 
-	clserpp::Buffer d_buffer = clserpp::Buffer{4096};
-	size_t d_read   = 0;
+	clserpp::Buffer           d_buffer = clserpp::Buffer{4096};
+	clserpp::Buffer::iterator d_head   = d_buffer.begin(),
+	                          d_tail   = d_buffer.begin();
 };
 } // namespace clserpp
 } // namespace fort

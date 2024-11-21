@@ -104,11 +104,8 @@ void execute(int argc, char **argv) {
 	std::string line;
 
 	while (true) {
-		while (buffer.HasByte() > 0) {
+		while (buffer.BytesAvailable() > 0) {
 			std::cout << buffer.ReadLine(1000, delim) << std::flush;
-			if (opts.verbose) {
-				std::cerr << buffer.Bytes();
-			}
 		}
 
 		line.clear();
@@ -135,10 +132,6 @@ void execute(int argc, char **argv) {
 				std::cerr << buffer.Bytes();
 			}
 			continue;
-		}
-
-		if (opts.verbose) {
-			std::cerr << buffer.Bytes();
 		}
 	}
 }

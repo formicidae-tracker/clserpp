@@ -13,14 +13,13 @@ public:
 
 	template <typename Container>
 	void Read(Container &buf, uint32_t timeout_ms) {
-		const auto end      = std::min(d_data.cend(), d_next + buf.size());
-		bool       complete = end <= d_data.end();
+		const auto end = std::min(d_data.cend(), d_next + buf.size());
 		std::copy(d_next, end, &buf[0]);
 		size_t read = std::distance(d_next, end);
-		if (!complete) {
+		d_next += read;
+		if (read < buf.size()) {
 			throw IOTimeout(read);
 		}
-		d_next += read;
 	}
 
 private:
@@ -49,4 +48,17 @@ TEST(ReadBuffer, CanReadLongBuffer) {
 	    buffer.ReadLine(1000, '\r'),
 	    "this is a very long long long buffer which spann lots of data\r"
 	);
+}
+
+TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
+	auto reader = std::make_shared<MockReader>(
+	    Buffer{std::string("a\nb\nc\nd"), LineTermination::LF}
+	);
+	auto buffer = ReadBuffer(reader);
+
+	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "a\n");
+	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "b\n");
+	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "c\n");
+	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "d\n");
+	EXPECT_THROW({ buffer.ReadLine(1000); }, IOTimeout);
 }

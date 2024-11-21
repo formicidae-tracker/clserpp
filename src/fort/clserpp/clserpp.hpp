@@ -122,7 +122,7 @@ public:
 		}
 	}
 
-	uint32_t ByteAvailable() const {
+	uint32_t BytesAvailable() const {
 		uint32_t res = 0;
 		details::call(clGetNumBytesAvail, d_serial, &res);
 		return res;
