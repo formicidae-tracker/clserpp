@@ -102,13 +102,12 @@ void execute(int argc, char **argv) {
 	}
 
 	std::string line;
+
 	while (true) {
-		serial->Flush();
-		while (serial->ByteAvailable() > 0) {
-			Buffer data(serial->ByteAvailable());
-			serial->Read(data, 1000);
+		while (buffer.HasByte() > 0) {
+			std::cout << buffer.ReadLine(1000, delim) << std::flush;
 			if (opts.verbose) {
-				std::cerr << data;
+				std::cerr << buffer.Bytes();
 			}
 		}
 
@@ -127,19 +126,19 @@ void execute(int argc, char **argv) {
 		serial->Flush();
 		try {
 			std::string res =
-			    buffer.ReadLine(1000, delims.at(size_t(termination)));
+			    buffer.ReadLine(10000, delims.at(size_t(termination)));
 
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
 			std::cerr << "timeout: " << e.what() << std::endl;
 			if (e.bytes() > 0) {
-				std::cerr << buffer.Buffer();
+				std::cerr << buffer.Bytes();
 			}
 			continue;
 		}
 
 		if (opts.verbose) {
-			std::cerr << buffer.Buffer();
+			std::cerr << buffer.Bytes();
 		}
 	}
 }

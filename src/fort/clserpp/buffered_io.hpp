@@ -50,6 +50,10 @@ public:
 		}
 	};
 
+	bool HasByte() const {
+		return d_read > 0 || d_reader->ByteAvailable() > 0;
+	}
+
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
 		while (true) {
 			bool timeouted = false;
@@ -70,6 +74,7 @@ public:
 			const auto pos = std::find(segment.d_begin, end, delim);
 
 			if (pos != end) {
+
 				std::string res{d_buffer.begin(), pos + 1};
 				std::copy(pos + 1, end, d_buffer.begin());
 				d_read = std::distance(pos + 1, end);
@@ -83,7 +88,7 @@ public:
 		}
 	}
 
-	const clserpp::Buffer &Buffer() const {
+	const clserpp::Buffer &Bytes() const {
 		return d_buffer;
 	}
 
