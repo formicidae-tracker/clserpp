@@ -43,14 +43,47 @@ private:
 	uint32_t d_bytes;
 };
 
+enum class LineTermination {
+	NONE     = 0,
+	LF       = 1,
+	CR       = 2,
+	CLRF     = 3,
+	NULLCHAR = 4,
+};
+
+namespace details {
+const static std::array<std::string, 5> terminations = {
+    "",
+    "\n",
+    "\r",
+    "\r\n",
+    "\x0",
+};
+}
+
 class Buffer : public std::vector<char> {
+
 public:
 	Buffer(size_t i)
 	    : std::vector<char>(i, '.') {}
 
-	Buffer(const std::string &value)
-	    : std::vector<char>(value.size(), 0) {
+	Buffer(
+	    const std::string &value,
+	    LineTermination    termination = LineTermination::NONE
+	)
+	    : std::vector<char>(
+	          value.size() +
+	              details::terminations.at(size_t(termination)).size(),
+	          0
+	      ) {
 		std::copy(value.cbegin(), value.cend(), this->begin());
+		const auto &terminationStr =
+		    details::terminations.at(size_t(termination));
+		std::copy(
+		    terminationStr.begin(),
+		    terminationStr.end(),
+		    this->begin() + value.size()
+		);
 	}
 };
 

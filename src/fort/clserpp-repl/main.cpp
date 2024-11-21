@@ -15,14 +15,6 @@
 
 using namespace fort::clserpp;
 
-enum class LineTermination {
-	NONE     = 0,
-	LF       = 1,
-	CR       = 2,
-	CLRF     = 3,
-	NULLCHAR = 4,
-};
-
 struct Opts : public argparse::Args {
 	int &baudrate = kwarg("b,baudrate", "Baudrate to use").set_default(19200);
 	int &interface =
@@ -31,6 +23,8 @@ struct Opts : public argparse::Args {
 	LineTermination &termination =
 	    kwarg("t,termination", "Line termination to use")
 	        .set_default(LineTermination::NONE);
+
+	bool &verbose = flag("v,verbose", "should I be verbose");
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {
@@ -94,7 +88,9 @@ void execute(int argc, char **argv) {
 		while (serial->ByteAvailable() > 0) {
 			Buffer data(serial->ByteAvailable());
 			serial->Read(data, 1000);
-			std::cout << "<<< " << data << std::endl;
+			if (opts.verbose) {
+				std::cerr << data;
+			}
 		}
 
 		Buffer res{1000};
@@ -103,15 +99,15 @@ void execute(int argc, char **argv) {
 		if (!std::getline(std::cin, line)) {
 			break;
 		}
-		Buffer out{line};
-		out.resize(out.size() + 1);
-		out[out.size() - 1] = '\n';
-		std::cerr << "sending '" << out << "'" << std::endl;
+
+		Buffer out{line, opts.termination};
+		if (opts.verbose) {
+			std::cerr << "sending " << out;
+		}
 
 		serial->Write(out, 1000);
 		serial->Flush();
 		try {
-
 			serial->Read(res, 1000);
 		} catch (const IOTimeout &e) {
 			std::cerr << "timeout: " << e.what() << std::endl;
