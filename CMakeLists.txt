@@ -54,8 +54,8 @@ FetchContent_Declare(
 
 FetchContent_Declare(
 	argparse
-	GIT_REPOSITORY https://github.com/morrisfranken/argparse/
-	GIT_TAG 015de6adee287917a9ee10afcbfcb8e560f4d9aa
+	GIT_REPOSITORY https://github.com/formicidae-tracker/argparse/
+	GIT_TAG a0860ba700100c0f192ccb5e3be2d4f670e9a958
 )
 
 FetchContent_MakeAvailable(cpptrace argparse magic_enum)
