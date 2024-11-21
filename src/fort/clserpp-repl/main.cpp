@@ -1,14 +1,28 @@
-#include <cpptrace/exceptions.hpp>
-#include <cpptrace/utils.hpp>
-#include <fort/clserpp/clserpp.hpp>
+#include "fort/clserpp/clser.h"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <string>
 
+#include <cpptrace/exceptions.hpp>
+#include <cpptrace/utils.hpp>
+
+#include <argparse/argparse.hpp>
+
+#include <fort/clserpp/clserpp.hpp>
+
 using namespace fort::clserpp;
 
+struct Opts : public argparse::Args {
+	clBaudrate_e &baudrate =
+	    kwarg("b,baudrate", "Baudrate to use").set_default(CL_BAUDRATE_19200);
+	int &interface = kwarg("i,idx"
+};
+
 void execute(int argc, char **argv) {
+	auto args = argparse::parse<Opts>(argc, argv);
+	args.print();
+
 	std::cout << "clserpp-repl" << std::endl;
 	const auto descriptions = Serial::GetDescriptions();
 	if (descriptions.size() == 0) {
@@ -44,7 +58,7 @@ void execute(int argc, char **argv) {
 		serial->Flush();
 		while (serial->ByteAvailable() > 0) {
 			Buffer data(serial->ByteAvailable());
-			serial->ReadAll(data, 1000);
+			serial->Read(data, 1000);
 			std::cout << "<<< " << data << std::endl;
 		}
 
@@ -59,11 +73,11 @@ void execute(int argc, char **argv) {
 		out[out.size() - 1] = '\n';
 		std::cerr << "sending '" << out << "'" << std::endl;
 
-		serial->WriteAll(out, 1000);
+		serial->Write(out, 1000);
 		serial->Flush();
 		try {
 
-			serial->ReadLine(res);
+			serial->Read(res, 1000);
 		} catch (const IOTimeout &e) {
 			std::cerr << "timeout: " << e.what() << std::endl;
 			if (e.bytes() > 0) {
