@@ -105,7 +105,15 @@ void execute(int argc, char **argv) {
 
 	while (true) {
 		while (buffer.BytesAvailable() > 0) {
-			std::cout << buffer.ReadLine(1000, delim) << std::flush;
+			try {
+				std::cout << buffer.ReadLine(1000, delim) << std::flush;
+			} catch (const IOTimeout &e) {
+				if (e.bytes() > 0) {
+					std::cout << buffer.Flush() << std::endl;
+				} else {
+					throw;
+				}
+			}
 		}
 
 		line.clear();

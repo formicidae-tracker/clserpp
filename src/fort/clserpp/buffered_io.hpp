@@ -72,11 +72,21 @@ public:
 		       0;
 	}
 
+	std::string Flush() {
+		if (d_head == d_tail) {
+			return "";
+		}
+
+		std::string res{d_head, d_tail};
+		d_head = d_buffer.begin();
+		d_tail = d_buffer.begin();
+		return res;
+	}
+
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
 		static const size_t segmentRead = 20;
 
 		bool timeouted = false;
-
 		while (true) {
 			// test if we can send back data
 			const auto pos = std::find(d_head, d_tail, delim);
@@ -105,6 +115,9 @@ public:
 				d_tail += segmentRead;
 				timeouted = false;
 			} catch (const IOTimeout &timeout) {
+				if (timeout.bytes() == 0) {
+					throw IOTimeout(std::distance(d_head, d_tail));
+				}
 				timeouted = true;
 				d_tail += timeout.bytes();
 			}
