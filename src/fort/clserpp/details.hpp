@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clser.h"
+#include "fort/clserpp/buffer.hpp"
 #include <cpptrace/exceptions.hpp>
 #include <optional>
 #include <string>
@@ -113,6 +114,25 @@ inline std::optional<clBaudrate_e> baudrate_cast(const std::string &bd) {
 	}
 	if (bd == "CL_BAUDRATE_921600") {
 		return CL_BAUDRATE_921600;
+	}
+	return std::nullopt;
+}
+
+inline std::optional<LineTermination> termination_cast(const std::string &s) {
+	if (s == "none") {
+		return LineTermination::NONE;
+	}
+	if (s == "lf") {
+		return LineTermination::LF;
+	}
+	if (s == "cr") {
+		return LineTermination::CR;
+	}
+	if (s == "crlf") {
+		return LineTermination::CRLF;
+	}
+	if (s == "null") {
+		return LineTermination::NULLCHAR;
 	}
 	return std::nullopt;
 }

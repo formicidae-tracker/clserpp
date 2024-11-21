@@ -21,9 +21,12 @@ struct Opts : public argparse::Args {
 	int &interface =
 	    kwarg("i,idx", "Interface to use, negative values ask for prompt")
 	        .set_default(-1);
-	LineTermination &termination =
-	    kwarg("t,termination", "Line termination to use")
-	        .set_default(LineTermination::NONE);
+	std::string &termination =
+	    kwarg(
+	        "t,termination",
+	        "Line termination to use [allowed: <none,lf,cr,crlf,null>]"
+	    )
+	        .set_default("none");
 
 	bool &verbose = flag("v,verbose", "should I be verbose");
 };
@@ -90,8 +93,8 @@ void execute(int argc, char **argv) {
 	    std::shared_ptr<Serial>(std::move(openInterface(opts.interface)));
 	setupBaudrate(*serial, opts.baudrate);
 
-	auto buffer = ReadBuffer<Serial>{serial};
-
+	auto buffer      = ReadBuffer<Serial>{serial};
+	auto termination = details::termination_cast(opts.termination).value();
 	std::string line;
 	while (true) {
 		serial->Flush();
@@ -109,7 +112,7 @@ void execute(int argc, char **argv) {
 			break;
 		}
 
-		Buffer out{line, opts.termination};
+		Buffer out{line, termination};
 		if (opts.verbose) {
 			std::cerr << "sending " << out;
 		}
@@ -118,7 +121,7 @@ void execute(int argc, char **argv) {
 		serial->Flush();
 		try {
 			std::string res =
-			    buffer.ReadLine(1000, delims.at(size_t(opts.termination)));
+			    buffer.ReadLine(1000, delims.at(size_t(termination)));
 
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {

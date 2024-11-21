@@ -13,7 +13,7 @@ enum class LineTermination {
 	NONE     = 0,
 	LF       = 1,
 	CR       = 2,
-	CLRF     = 3,
+	CRLF     = 3,
 	NULLCHAR = 4,
 };
 
