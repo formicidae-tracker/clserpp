@@ -73,26 +73,14 @@ public:
 		       0;
 	}
 
-	std::string Flush() {
-		if (d_head == d_tail) {
-			return "";
-		}
-
-		std::string res{d_head, d_tail};
-		d_head = d_buffer.begin();
-		d_tail = d_buffer.begin();
-		return res;
-	}
-
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
+		size_t available = d_reader->BytesAvailable();
 		SPDLOG_DEBUG(
 		    "ReadLine head:{} tail:{} available:{} left: '{}'",
 		    std::distance(d_buffer.begin(), d_head),
 		    std::distance(d_buffer.begin(), d_tail),
-		    d_reader->BytesAvailable(),
 		    std::string(d_head, d_tail)
 		);
-		static const size_t segmentRead = 40;
 
 		bool timeouted = false;
 		while (true) {
@@ -117,10 +105,10 @@ public:
 			    " --- remaining {}, at beginning: {}, will rotate: {}",
 			    left,
 			    atBeginning,
-			    left < segmentRead && !atBeginning
+			    left < available && !atBeginning
 			);
 			// make room if possible
-			if (left < segmentRead) {
+			if (left < available) {
 				if (atBeginning) {
 					throw cpptrace::runtime_error("read buffer too small");
 				}
@@ -133,12 +121,12 @@ public:
 			}
 
 			// read more if possible
-			details::BufferView segment{d_buffer, d_tail, d_tail + segmentRead};
+			details::BufferView segment{d_buffer, d_tail, d_tail + available};
 
 			try {
-				SPDLOG_DEBUG(" --- reading {} more", segmentRead);
+				SPDLOG_DEBUG(" --- reading {} more", available);
 				d_reader->Read(segment, timeout_ms);
-				d_tail += segmentRead;
+				d_tail += available;
 				timeouted = false;
 			} catch (const IOTimeout &timeout) {
 				SPDLOG_DEBUG(

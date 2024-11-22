@@ -118,15 +118,7 @@ void execute(int argc, char **argv) {
 
 	while (true) {
 		while (buffer.BytesAvailable() > 0) {
-			try {
-				std::cout << buffer.ReadLine(1000, delim) << std::flush;
-			} catch (const IOTimeout &e) {
-				if (e.bytes() > 0) {
-					std::cout << buffer.Flush() << std::endl;
-				} else {
-					throw;
-				}
-			}
+			std::cout << buffer.ReadLine(1000, delim) << std::flush;
 		}
 
 		line.clear();
@@ -137,11 +129,11 @@ void execute(int argc, char **argv) {
 
 		Buffer out{line, termination};
 		spdlog::info("sending {}", out);
-		serial->Write(out, 1000);
+		serial->Write(out, 0);
 
 		try {
 			std::string res =
-			    buffer.ReadLine(10000, delims.at(size_t(termination)));
+			    buffer.ReadLine(-1, delims.at(size_t(termination)));
 
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
