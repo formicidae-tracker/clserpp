@@ -40,6 +40,9 @@ struct Opts : public argparse::Args {
 
 	std::string &delimiter =
 	    kwarg("d,delimiter", "line delimiter to use").set_default("\r\n>");
+
+	int &timeout =
+	    kwarg("T,timeout", "timeout for IO operation in ms").set_default(100);
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {
@@ -115,7 +118,8 @@ void execute(int argc, char **argv) {
 
 	while (true) {
 		while (buffer.BytesAvailable() > 0) {
-			std::cout << buffer.ReadUntil(100, opts.delimiter) << std::flush;
+			std::cout << buffer.ReadUntil(opts.timeout, opts.delimiter)
+			          << std::flush;
 		}
 
 		line.clear();
@@ -126,10 +130,10 @@ void execute(int argc, char **argv) {
 
 		Buffer out{line, termination};
 		SPDLOG_INFO("sending {}", out);
-		serial->Write(out, 100);
+		serial->Write(out, opts.timeout);
 
 		try {
-			std::string res = buffer.ReadUntil(100, opts.delimiter);
+			std::string res = buffer.ReadUntil(opts.timeout, opts.delimiter);
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
 			SPDLOG_DEBUG(
