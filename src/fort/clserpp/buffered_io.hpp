@@ -130,8 +130,12 @@ public:
 				timeouted = false;
 			} catch (const IOTimeout &timeout) {
 				SPDLOG_DEBUG(
-				    " --- timeouted, {} read, {}",
+				    " --- timeouted after {} bytes, head: {}, tail: {} == '{}' "
+				    "{}",
 				    timeout.bytes(),
+				    std::distance(d_buffer.begin(), d_head),
+				    std::distance(d_buffer.begin(), d_tail),
+				    std::string(d_head, d_tail),
 				    d_buffer
 				);
 				if (timeout.bytes() == 0) {
