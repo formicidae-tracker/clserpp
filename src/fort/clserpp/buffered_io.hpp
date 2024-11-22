@@ -104,7 +104,7 @@ public:
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
-			available = std::max(size_t(1), available);
+			available = std::max(1U, d_reader->BytesAvailable());
 
 			size_t left        = std::distance(d_tail, d_buffer.end());
 			bool   atBeginning = d_head == d_buffer.begin();
