@@ -1,3 +1,4 @@
+#include "fort/clserpp/exceptions.hpp"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -95,14 +96,6 @@ void execute(int argc, char **argv) {
 	spdlog::set_level(spdlog::level::info);
 #endif
 
-	static std::array<char, 5> delims = {
-	    '\n',
-	    '\r',
-	    '\n',
-	    '\n',
-	    0,
-	};
-
 	auto opts = argparse::parse<Opts>(argc, argv);
 
 	auto serial =
@@ -111,14 +104,20 @@ void execute(int argc, char **argv) {
 
 	auto buffer      = ReadBuffer<Serial>{serial};
 	auto termination = details::termination_cast(opts.termination).value();
-	auto delim       = delims.at(size_t(termination));
 
-	spdlog::info("using delim '{}'", delim);
+	std::string delim = "\r\n";
+
 	std::string line;
 
 	while (true) {
 		while (buffer.BytesAvailable() > 0) {
-			std::cout << buffer.ReadLine(1000, delim) << std::flush;
+			try {
+				std::cout << buffer.ReadUntil(100, delim) << std::flush;
+			} catch (const IOTimeout &e) {
+				if (e.bytes() != 1 || buffer.Reminder() != ">") {
+					throw;
+				}
+			}
 		}
 
 		line.clear();
@@ -129,12 +128,10 @@ void execute(int argc, char **argv) {
 
 		Buffer out{line, termination};
 		spdlog::info("sending {}", out);
-		serial->Write(out, 0);
+		serial->Write(out, 100);
 
 		try {
-			std::string res =
-			    buffer.ReadLine(-1, delims.at(size_t(termination)));
-
+			std::string res = buffer.ReadUntil(100, delim);
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
 			SPDLOG_DEBUG(

@@ -43,7 +43,7 @@ TEST(ReadBuffer, CanReadSmallBuffer) {
 	);
 	auto buffer = ReadBuffer(reader);
 
-	EXPECT_EQ(buffer.ReadLine(1000), "this is a value \r\n");
+	EXPECT_EQ(buffer.ReadUntil(1000), "this is a value \r\n");
 }
 
 TEST(ReadBuffer, CanReadLongBuffer) {
@@ -55,7 +55,7 @@ TEST(ReadBuffer, CanReadLongBuffer) {
 	auto buffer = ReadBuffer(reader);
 
 	EXPECT_EQ(
-	    buffer.ReadLine(1000, '\r'),
+	    buffer.ReadUntil(1000, "\r"),
 	    "this is a very long long long buffer which spann lots of data\r"
 	);
 }
@@ -71,10 +71,10 @@ TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
 	);
 	auto buffer = ReadBuffer(reader);
 
-	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "a\n");
-	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "b\n");
-	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "c\n");
-	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "d\n");
+	EXPECT_EQ(buffer.ReadUntil(1000, "\n"), "a\n");
+	EXPECT_EQ(buffer.ReadUntil(1000, "\n"), "b\n");
+	EXPECT_EQ(buffer.ReadUntil(1000, "\n"), "c\n");
+	EXPECT_EQ(buffer.ReadUntil(1000, "\n"), "d\n");
 
-	EXPECT_THROW({ buffer.ReadLine(1000); }, IOTimeout);
+	EXPECT_THROW({ buffer.ReadUntil(1000); }, IOTimeout);
 }

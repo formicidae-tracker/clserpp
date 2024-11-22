@@ -70,25 +70,27 @@ public:
 
 	bool BytesAvailable() const {
 		return std::distance(
-		           d_buffer.begin(),
-		           clserpp::Buffer::const_iterator{d_tail}
-		       ) + d_reader->BytesAvailable() >
-		       0;
+		    d_buffer.begin(),
+		    clserpp::Buffer::const_iterator{d_tail}
+		);
 	}
 
-	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
+	std::string
+	ReadUntil(uint32_t timeout_ms, const std::string &delim = "\n") {
 		size_t available = d_reader->BytesAvailable();
 		SPDLOG_DEBUG(
 		    "ReadLine head:{} tail:{} available:{} left: '{}'",
 		    std::distance(d_buffer.begin(), d_head),
 		    std::distance(d_buffer.begin(), d_tail),
+		    available,
 		    std::string(d_head, d_tail)
 		);
 
 		bool timeouted = false;
 		while (true) {
 			// test if we can send back data
-			const auto pos = std::find(d_head, d_tail, delim);
+			const auto pos =
+			    std::search(d_head, d_tail, delim.cbegin(), delim.cend());
 			if (pos != d_tail) {
 				SPDLOG_DEBUG(
 				    " --- Found delim at {}",
@@ -144,12 +146,17 @@ public:
 				    d_buffer
 				);
 				if (timeout.bytes() == 0) {
+
 					throw IOTimeout(std::distance(d_head, d_tail));
 				}
 				timeouted = true;
 				d_tail += timeout.bytes();
 			}
 		}
+	}
+
+	std::string Reminder() const {
+		return std::string(d_head, d_tail);
 	}
 
 	const clserpp::Buffer &Bytes() const {
