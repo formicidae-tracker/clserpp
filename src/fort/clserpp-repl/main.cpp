@@ -99,6 +99,11 @@ void setupBaudrate(Serial &serial, int baudrate) {
 void execute(int argc, char **argv) {
 	auto fileLogger = spdlog::basic_logger_mt("file", "logs.txt");
 	spdlog::set_default_logger(fileLogger);
+#ifndef NDEBUG
+	spdlog::set_level(spdlog::level::debug);
+#else
+	spdlog::set_level(spdlog::level::info);
+#endif
 
 	static std::array<char, 5> delims = {
 	    '\n',
