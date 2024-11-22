@@ -128,7 +128,7 @@ void execute(int argc, char **argv) {
 		}
 
 		serial->Write(out, 1000);
-		serial->Flush();
+
 		try {
 			std::string res =
 			    buffer.ReadLine(10000, delims.at(size_t(termination)));
