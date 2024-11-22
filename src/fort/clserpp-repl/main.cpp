@@ -117,7 +117,13 @@ void execute(int argc, char **argv) {
 	std::string line;
 
 	while (true) {
+		SPDLOG_INFO(
+		    "buffer available: {}, serial available: {}",
+		    buffer.BytesAvailable(),
+		    serial->BytesAvailable()
+		);
 		while (buffer.BytesAvailable() > 0 || serial->BytesAvailable() > 0) {
+
 			std::cout << buffer.ReadUntil(opts.timeout, opts.delimiter)
 			          << std::flush;
 		}

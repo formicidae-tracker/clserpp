@@ -69,11 +69,8 @@ public:
 		}
 	};
 
-	bool BytesAvailable() const {
-		return std::distance(
-		    d_buffer.begin(),
-		    clserpp::Buffer::const_iterator{d_tail}
-		);
+	size_t BytesAvailable() const {
+		return std::distance(d_head, d_tail);
 	}
 
 	std::string
