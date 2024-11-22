@@ -166,6 +166,22 @@ inline const char *escape_char(char c) {
 	return nullptr;
 }
 
+inline std::string escape(const std::string &s) {
+	std::string res;
+	res.reserve(s.size() * 2);
+	for (const auto c : s) {
+		auto escaped = fort::clserpp::details::escape_char(c);
+		if (escaped == nullptr) {
+			res.push_back(c);
+			continue;
+		}
+		for (const auto cc : std::string(escaped)) {
+			res.push_back(cc);
+		}
+	}
+	return res;
+}
+
 inline std::string parse_ascii(const std::string &str) {
 	std::string res;
 	res.reserve(str.size());

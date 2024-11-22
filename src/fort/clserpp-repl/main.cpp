@@ -37,6 +37,9 @@ struct Opts : public argparse::Args {
 	        "Line termination to use [allowed: <none,lf,cr,crlf,null>]"
 	    )
 	        .set_default("none");
+
+	std::string &delimiter =
+	    kwarg("d,delimiter", "line delimiter to use").set_default("\r\n>");
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {
@@ -87,9 +90,10 @@ void setupBaudrate(Serial &serial, int baudrate) {
 }
 
 void execute(int argc, char **argv) {
+#ifndef NDEBUG
 	auto fileLogger = spdlog::basic_logger_mt("file", "logs.txt");
 	spdlog::set_default_logger(fileLogger);
-#ifndef NDEBUG
+
 	spdlog::set_level(spdlog::level::debug);
 	fileLogger->flush_on(spdlog::level::debug);
 #else
@@ -105,19 +109,13 @@ void execute(int argc, char **argv) {
 	auto buffer      = ReadBuffer<Serial>{serial};
 	auto termination = details::termination_cast(opts.termination).value();
 
-	std::string delim = "\r\n";
+	SPDLOG_INFO("using delimiter {}", details::escape(opts.delimiter));
 
 	std::string line;
 
 	while (true) {
 		while (buffer.BytesAvailable() > 0) {
-			try {
-				std::cout << buffer.ReadUntil(100, delim) << std::flush;
-			} catch (const IOTimeout &e) {
-				if (e.bytes() != 1 || buffer.Reminder() != ">") {
-					throw;
-				}
-			}
+			std::cout << buffer.ReadUntil(100, opts.delimiter) << std::flush;
 		}
 
 		line.clear();
@@ -127,11 +125,11 @@ void execute(int argc, char **argv) {
 		}
 
 		Buffer out{line, termination};
-		spdlog::info("sending {}", out);
+		SPDLOG_INFO("sending {}", out);
 		serial->Write(out, 100);
 
 		try {
-			std::string res = buffer.ReadUntil(100, delim);
+			std::string res = buffer.ReadUntil(100, opts.delimiter);
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
 			SPDLOG_DEBUG(
