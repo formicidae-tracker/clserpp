@@ -91,7 +91,7 @@ public:
 		    std::distance(d_buffer.begin(), d_tail),
 		    d_reader->BytesAvailable()
 		);
-		static const size_t segmentRead = 20;
+		static const size_t segmentRead = 40;
 
 		bool timeouted = false;
 		while (true) {
@@ -131,7 +131,12 @@ public:
 			} catch (const IOTimeout &timeout) {
 				SPDLOG_DEBUG(" --- timeouted, {} read", timeout.bytes());
 				if (timeout.bytes() == 0) {
-					throw IOTimeout(std::distance(d_head, d_tail));
+					if (d_reader->BytesAvailable() > 0) {
+						d_reader->Flush();
+						continue;
+					} else {
+						throw IOTimeout(std::distance(d_head, d_tail));
+					}
 				}
 				timeouted = true;
 				d_tail += timeout.bytes();

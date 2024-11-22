@@ -22,6 +22,12 @@ public:
 		}
 	}
 
+	uint32_t BytesAvailable() const {
+		return std::distance(d_next, d_data.end());
+	}
+
+	void Flush() const {}
+
 private:
 	Buffer                 d_data;
 	Buffer::const_iterator d_next;
