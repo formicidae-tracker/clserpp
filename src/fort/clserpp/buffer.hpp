@@ -8,16 +8,10 @@
 
 #include <spdlog/spdlog.h>
 
+#include "details.hpp"
+
 namespace fort {
 namespace clserpp {
-
-enum class LineTermination {
-	NONE     = 0,
-	LF       = 1,
-	CR       = 2,
-	CRLF     = 3,
-	NULLCHAR = 4,
-};
 
 namespace details {
 const static std::array<std::string, 5> terminations = {
@@ -80,30 +74,15 @@ operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
 	    [](std::ostream                 &out,
 	       const Buffer::const_iterator &start,
 	       const Buffer::const_iterator &end) {
-		    struct EscapableChar {
-			public:
-			    char        value;
-			    const char *escaped;
-		    };
-
-		    const std::array<EscapableChar, 2> escapables = {
-		        EscapableChar{.value = '\r', .escaped = "\\r"},
-		        EscapableChar{.value = '\n', .escaped = "\\n"},
-		    };
 		    for (auto iter = start; iter != end; ++iter) {
 			    if (std::isprint(*iter)) {
 				    out << char(*iter);
 				    continue;
 			    }
-			    auto pos = std::find_if(
 
-			        escapables.begin(),
-			        escapables.end(),
-			        [v = *iter](const EscapableChar &c) { return c.value == v; }
-			    );
-
-			    if (pos != escapables.end()) {
-				    out << pos->escaped;
+			    const auto *escaped = details::escape_char(*iter);
+			    if (escaped != nullptr) {
+				    out << escaped;
 				    continue;
 			    }
 

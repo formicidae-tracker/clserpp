@@ -1,7 +1,10 @@
 #pragma once
 
 #include "clser.h"
-#include "fort/clserpp/buffer.hpp"
+
+#include "types.hpp"
+
+#include <algorithm>
 #include <cpptrace/exceptions.hpp>
 #include <optional>
 #include <string>
@@ -135,6 +138,67 @@ inline std::optional<LineTermination> termination_cast(const std::string &s) {
 		return LineTermination::NULLCHAR;
 	}
 	return std::nullopt;
+}
+
+inline const char *escape_char(char c) {
+	struct EscapableChar {
+	public:
+		char        value;
+		const char *escaped;
+	};
+
+	const static std::array<EscapableChar, 4> escapables = {
+	    EscapableChar{.value = '\r', .escaped = "\\r"},
+	    EscapableChar{.value = '\n', .escaped = "\\n"},
+	    EscapableChar{.value = '\\', .escaped = R"(\)"},
+	    EscapableChar{.value = '\t', .escaped = "\\t"},
+	};
+
+	auto pos = std::find_if(
+	    escapables.begin(),
+	    escapables.end(),
+	    [v = c](const EscapableChar &c) { return c.value == v; }
+	);
+
+	if (pos != escapables.end()) {
+		return pos->escaped;
+	}
+	return nullptr;
+}
+
+inline std::string parse_ascii(const std::string &str) {
+	std::string res;
+	res.reserve(str.size());
+	for (auto it = str.begin(); it != str.end(); ++it) {
+		auto found = std::find(it, str.end(), '\\');
+		res.insert(res.end(), it, found);
+		if (found == str.end()) {
+			break;
+		}
+		if (found == str.end() - 1) {
+			res.push_back('\\');
+			break;
+		}
+
+		it = found + 1;
+		std::cerr << "got: " << *it << std::endl;
+		switch (*(found + 1)) {
+		case 'n':
+			res.push_back('\n');
+			break;
+		case 'r':
+			res.push_back('\r');
+			break;
+		case 't':
+			res.push_back('\t');
+			break;
+		default:
+			res.push_back('\\');
+			--it;
+			break;
+		}
+	}
+	return res;
 }
 
 } // namespace details

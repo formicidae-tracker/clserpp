@@ -1,7 +1,32 @@
-#include "buffer.hpp"
 #include <gtest/gtest.h>
 
 #include <sstream>
+
+#include "buffer.hpp"
+#include "details.hpp"
+
+TEST(Buffer, Escaping) {
+	static const auto escape = [](const std::string &s) {
+		std::string res;
+		res.reserve(s.size() * 2);
+		for (const auto c : s) {
+			auto escaped = fort::clserpp::details::escape_char(c);
+			if (escaped == nullptr) {
+				res.push_back(c);
+				continue;
+			}
+			for (const auto cc : std::string(escaped)) {
+				res.push_back(cc);
+			}
+		}
+		return res;
+	};
+
+	std::string escaped{R"(\n\r\t\foo)"}, parsed{"\n\r\t\\foo"};
+
+	EXPECT_EQ(escape(parsed), escaped);
+	EXPECT_EQ(fort::clserpp::details::parse_ascii(escaped), parsed);
+}
 
 TEST(Buffer, Formatting) {
 

@@ -164,11 +164,7 @@ public:
 	}
 
 private:
-#ifndef NDEBUG
-	const static size_t BUFFER_SIZE = 128;
-#else
 	const static size_t BUFFER_SIZE = 4096;
-#endif
 
 	std::shared_ptr<Reader> d_reader = nullptr;
 
