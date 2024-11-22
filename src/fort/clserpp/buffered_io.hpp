@@ -96,8 +96,8 @@ public:
 				    " --- Found delim at {}",
 				    std::distance(d_buffer.begin(), pos)
 				);
-				std::string res{d_head, pos + 1};
-				d_head = pos + 1;
+				std::string res{d_head, pos + delim.size()};
+				d_head = pos + delim.size();
 				return res;
 			} else if (timeouted) {
 				SPDLOG_DEBUG(" --- timeouted");

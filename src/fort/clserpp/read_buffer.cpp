@@ -4,6 +4,7 @@
 #include "buffered_io.hpp"
 #include "exceptions.hpp"
 
+#include <memory>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -77,4 +78,11 @@ TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
 	EXPECT_EQ(buffer.ReadUntil(1000, "\n"), "d\n");
 
 	EXPECT_THROW({ buffer.ReadUntil(1000); }, IOTimeout);
+}
+
+TEST(ReadBuffer, CanReadComplexDelimiter) {
+	auto reader = std::make_shared<MockReader>(Buffer{"foo\r\n>"});
+	auto buffer = ReadBuffer(reader);
+	EXPECT_EQ(buffer.ReadUntil(1000, "\r\n>"), "foo\r\n>");
+	EXPECT_EQ(buffer.Reminder(), "");
 }
