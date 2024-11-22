@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 
+#include <spdlog/spdlog.h>
+
 namespace fort {
 namespace clserpp {
 
@@ -138,3 +140,14 @@ operator<<(std::ostream &out, const fort::clserpp::Buffer &buf) {
 
 	return out;
 }
+
+template <>
+struct fmt::formatter<fort::clserpp::Buffer> : fmt::formatter<std::string> {
+	auto format(const fort::clserpp::Buffer &buf, format_context &ctx) const
+	    -> decltype(ctx.out()) {
+		std::ostringstream out;
+		out << buf;
+
+		return fmt::format_to(ctx.out(), "{}", out.str());
+	}
+};

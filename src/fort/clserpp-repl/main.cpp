@@ -23,17 +23,6 @@
 #include <fort/clserpp/buffer.hpp>
 #include <fort/clserpp/clserpp.hpp>
 
-template <>
-struct fmt::formatter<fort::clserpp::Buffer> : fmt::formatter<std::string> {
-	auto format(const fort::clserpp::Buffer &buf, format_context &ctx) const
-	    -> decltype(ctx.out()) {
-		std::ostringstream out;
-		out << buf;
-
-		return fmt::format_to(ctx.out(), "{}", out.str());
-	}
-};
-
 using namespace fort::clserpp;
 
 struct Opts : public argparse::Args {
@@ -155,7 +144,11 @@ void execute(int argc, char **argv) {
 
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
-			SPDLOG_DEBUG("got timeout: {}, {}", e, buffer);
+			SPDLOG_DEBUG(
+			    "got timeout: {} bytes, {}",
+			    e.bytes(),
+			    buffer.Bytes()
+			);
 			continue;
 		}
 	}
