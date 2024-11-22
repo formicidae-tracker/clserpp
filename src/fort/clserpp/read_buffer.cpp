@@ -3,6 +3,9 @@
 #include "buffer.hpp"
 #include "buffered_io.hpp"
 
+#include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/spdlog.h>
+
 using namespace fort::clserpp;
 
 class MockReader {
@@ -57,6 +60,11 @@ TEST(ReadBuffer, CanReadLongBuffer) {
 }
 
 TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
+	auto logger = spdlog::stderr_logger_mt("tests");
+	logger->set_level(spdlog::level::debug);
+	logger->flush_on(spdlog::level::debug);
+	spdlog::set_default_logger(logger);
+
 	auto reader = std::make_shared<MockReader>(
 	    Buffer{std::string("a\nb\nc\nd"), LineTermination::LF}
 	);
@@ -66,5 +74,6 @@ TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
 	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "b\n");
 	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "c\n");
 	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "d\n");
-	EXPECT_THROW({ buffer.ReadLine(1000); }, IOTimeout);
+
+	EXPECT_THROW({ buffer.ReadLine(1000); }, EndOfStream);
 }

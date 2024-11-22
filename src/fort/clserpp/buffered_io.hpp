@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -56,6 +57,8 @@ public:
 };
 } // namespace details
 
+class EndOfStream {};
+
 template <typename Reader> class ReadBuffer {
 public:
 	ReadBuffer(std::shared_ptr<Reader> reader)
@@ -96,6 +99,13 @@ public:
 				return res;
 			} else if (timeouted) {
 				SPDLOG_DEBUG(" --- timeouted");
+				throw IOTimeout(std::distance(d_head, d_tail));
+			}
+
+			if (available == 0) {
+				if (d_head == d_tail) {
+					throw EndOfStream{};
+				}
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
