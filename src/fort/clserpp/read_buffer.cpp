@@ -2,6 +2,7 @@
 
 #include "buffer.hpp"
 #include "buffered_io.hpp"
+#include "exceptions.hpp"
 
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/spdlog.h>
@@ -75,5 +76,5 @@ TEST(ReadBuffer, CanReadMultipleSmallBuffers) {
 	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "c\n");
 	EXPECT_EQ(buffer.ReadLine(1000, '\n'), "d\n");
 
-	EXPECT_THROW({ buffer.ReadLine(1000); }, EndOfStream);
+	EXPECT_THROW({ buffer.ReadLine(1000); }, IOTimeout);
 }

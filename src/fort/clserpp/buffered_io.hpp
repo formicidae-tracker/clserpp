@@ -102,12 +102,7 @@ public:
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
-			if (available == 0) {
-				if (d_head == d_tail) {
-					throw EndOfStream{};
-				}
-				throw IOTimeout(std::distance(d_head, d_tail));
-			}
+			available = std::max(size_t(1), available);
 
 			size_t left        = std::distance(d_tail, d_buffer.end());
 			bool   atBeginning = d_head == d_buffer.begin();
