@@ -86,10 +86,11 @@ public:
 
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
 		SPDLOG_DEBUG(
-		    "ReadLine head:{} tail:{} available:{}",
+		    "ReadLine head:{} tail:{} available:{} left: '{}'",
 		    std::distance(d_buffer.begin(), d_head),
 		    std::distance(d_buffer.begin(), d_tail),
-		    d_reader->BytesAvailable()
+		    d_reader->BytesAvailable(),
+		    std::string(d_head, d_tail)
 		);
 		static const size_t segmentRead = 40;
 
