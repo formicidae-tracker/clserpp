@@ -16,11 +16,23 @@
 #endif
 
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
 
 #include "fort/clserpp/buffered_io.hpp"
 #include "fort/clserpp/details.hpp"
 #include <fort/clserpp/buffer.hpp>
 #include <fort/clserpp/clserpp.hpp>
+
+template <>
+struct fmt::formatter<fort::clserpp::Buffer> : fmt::formatter<std::string> {
+	auto format(const fort::clserpp::Buffer &buf, format_context &ctx) const
+	    -> decltype(ctx.out()) {
+		std::ostringstream out;
+		out << buf;
+
+		return fmt::format_to(ctx.out(), "{}", out.str());
+	}
+};
 
 using namespace fort::clserpp;
 
@@ -35,8 +47,6 @@ struct Opts : public argparse::Args {
 	        "Line termination to use [allowed: <none,lf,cr,crlf,null>]"
 	    )
 	        .set_default("none");
-
-	bool &verbose = flag("v,verbose", "should I be verbose");
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {
@@ -108,10 +118,7 @@ void execute(int argc, char **argv) {
 	auto termination = details::termination_cast(opts.termination).value();
 	auto delim       = delims.at(size_t(termination));
 
-	if (opts.verbose) {
-		std::cerr << "Using delim '" << delim << "'" << std::endl;
-	}
-
+	spdlog::info("using delim '{}'", delim);
 	std::string line;
 
 	while (true) {
@@ -134,10 +141,7 @@ void execute(int argc, char **argv) {
 		}
 
 		Buffer out{line, termination};
-		if (opts.verbose) {
-			std::cerr << "sending " << out;
-		}
-
+		spdlog::info("sending {}", out);
 		serial->Write(out, 1000);
 
 		try {
@@ -146,10 +150,7 @@ void execute(int argc, char **argv) {
 
 			std::cout << "<<< " << res << std::endl;
 		} catch (const IOTimeout &e) {
-			std::cerr << "timeout: " << e.what() << std::endl;
-			if (e.bytes() > 0) {
-				std::cerr << buffer.Bytes();
-			}
+			SPDLOG_DEBUG("got timeout: {}, {}", e, buffer);
 			continue;
 		}
 	}
