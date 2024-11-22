@@ -6,7 +6,7 @@ set(TEST_HDR_FILES)
 
 add_library(clserpp SHARED ${SRC_FILES} ${HDR_FILES})
 
-target_link_libraries(clserpp PUBLIC cpptrace::cpptrace)
+target_link_libraries(clserpp PUBLIC cpptrace::cpptrace spdlog::spdlog_header_only)
 target_link_libraries(clserpp INTERFACE ${CLSER_LIBRARY})
 
 if(CLSERPP_IMPORTED)

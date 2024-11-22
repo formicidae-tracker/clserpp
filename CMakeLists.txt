@@ -53,7 +53,13 @@ FetchContent_Declare(
 	GIT_TAG a0860ba700100c0f192ccb5e3be2d4f670e9a958
 )
 
-FetchContent_MakeAvailable(cpptrace argparse)
+FetchContent_Declare(
+	spdlog
+	GIT_REPOSITORY https://github.com/gabime/spdlog
+	GIT_TAG v1.15.0
+)
+
+FetchContent_MakeAvailable(cpptrace argparse spdlog)
 
 if(NOT CLSERPP_IMPORTED)
 

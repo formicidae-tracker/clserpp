@@ -3,9 +3,10 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <string>
 
 #include <cpptrace/exceptions.hpp>
-#include <string>
+#include <spdlog/spdlog.h>
 
 #include "buffer.hpp"
 #include "exceptions.hpp"
@@ -84,6 +85,12 @@ public:
 	}
 
 	std::string ReadLine(uint32_t timeout_ms, char delim = '\n') {
+		SPDLOG_DEBUG(
+		    "ReadLine head:{} tail:{} available:{}",
+		    std::distance(d_buffer.begin(), d_head),
+		    std::distance(d_buffer.begin(), d_tail),
+		    d_reader->BytesAvailable()
+		);
 		static const size_t segmentRead = 20;
 
 		bool timeouted = false;
@@ -91,16 +98,22 @@ public:
 			// test if we can send back data
 			const auto pos = std::find(d_head, d_tail, delim);
 			if (pos != d_tail) {
+				SPDLOG_DEBUG(
+				    " --- Found delim at {}",
+				    std::distance(d_buffer.begin(), pos)
+				);
 				std::string res{d_head, pos + 1};
 				d_head = pos + 1;
 				return res;
 			} else if (timeouted) {
+				SPDLOG_DEBUG(" --- timeouted");
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
 			// make room if possible
 			if (std::distance(d_tail, d_buffer.end()) < segmentRead &&
 			    d_head != d_buffer.begin()) {
+				SPDLOG_DEBUG(" --- wrapping ring buffer");
 				size_t available = std::distance(d_head, d_tail);
 				std::copy(d_head, d_tail, d_buffer.begin());
 				d_head = d_buffer.begin();
@@ -111,10 +124,12 @@ public:
 			details::BufferView segment{d_buffer, d_tail, d_tail + segmentRead};
 
 			try {
+				SPDLOG_DEBUG(" --- reading {} more", segmentRead);
 				d_reader->Read(segment, timeout_ms);
 				d_tail += segmentRead;
 				timeouted = false;
 			} catch (const IOTimeout &timeout) {
+				SPDLOG_DEBUG(" --- timeouted, {} read", timeout.bytes());
 				if (timeout.bytes() == 0) {
 					throw IOTimeout(std::distance(d_head, d_tail));
 				}
@@ -130,9 +145,9 @@ public:
 
 private:
 #ifndef NDEBUG
-	const static size_t BUFFER_SIZE = 4096;
-#else
 	const static size_t BUFFER_SIZE = 128;
+#else
+	const static size_t BUFFER_SIZE = 4096;
 #endif
 
 	std::shared_ptr<Reader> d_reader = nullptr;

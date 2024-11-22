@@ -1,5 +1,3 @@
-#include "fort/clserpp/buffered_io.hpp"
-#include "fort/clserpp/details.hpp"
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -11,6 +9,16 @@
 
 #include <argparse/argparse.hpp>
 
+#ifndef NDEBUG
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+#else
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_ERROR
+#endif
+
+#include <spdlog/sinks/basic_file_sink.h>
+
+#include "fort/clserpp/buffered_io.hpp"
+#include "fort/clserpp/details.hpp"
 #include <fort/clserpp/buffer.hpp>
 #include <fort/clserpp/clserpp.hpp>
 
@@ -79,6 +87,9 @@ void setupBaudrate(Serial &serial, int baudrate) {
 }
 
 void execute(int argc, char **argv) {
+	auto fileLogger = spdlog::basic_logger_mt("file", "logs.txt");
+	spdlog::set_default_logger(fileLogger);
+
 	static std::array<char, 5> delims = {
 	    '\n',
 	    '\r',
