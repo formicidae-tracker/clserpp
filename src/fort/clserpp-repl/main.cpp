@@ -141,7 +141,7 @@ void execute(int argc, char **argv) {
 			    e.bytes(),
 			    buffer.Bytes()
 			);
-			continue;
+			throw;
 		}
 	}
 }
