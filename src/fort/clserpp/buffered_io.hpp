@@ -129,9 +129,15 @@ public:
 	}
 
 private:
+#ifndef NDEBUG
+	const static size_t BUFFER_SIZE = 4096;
+#else
+	const static size_t BUFFER_SIZE = 128;
+#endif
+
 	std::shared_ptr<Reader> d_reader = nullptr;
 
-	clserpp::Buffer           d_buffer = clserpp::Buffer{4096};
+	clserpp::Buffer           d_buffer = clserpp::Buffer{BUFFER_SIZE};
 	clserpp::Buffer::iterator d_head   = d_buffer.begin(),
 	                          d_tail   = d_buffer.begin();
 };
