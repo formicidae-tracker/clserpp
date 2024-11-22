@@ -90,6 +90,7 @@ void execute(int argc, char **argv) {
 	spdlog::set_default_logger(fileLogger);
 #ifndef NDEBUG
 	spdlog::set_level(spdlog::level::debug);
+	fileLogger->flush_on(spdlog::level::debug);
 #else
 	spdlog::set_level(spdlog::level::info);
 #endif

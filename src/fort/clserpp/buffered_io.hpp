@@ -129,14 +129,13 @@ public:
 				d_tail += segmentRead;
 				timeouted = false;
 			} catch (const IOTimeout &timeout) {
-				SPDLOG_DEBUG(" --- timeouted, {} read", timeout.bytes());
+				SPDLOG_DEBUG(
+				    " --- timeouted, {} read, {}",
+				    timeout.bytes(),
+				    d_buffer
+				);
 				if (timeout.bytes() == 0) {
-					if (d_reader->BytesAvailable() > 0) {
-						d_reader->Flush();
-						continue;
-					} else {
-						throw IOTimeout(std::distance(d_head, d_tail));
-					}
+					throw IOTimeout(std::distance(d_head, d_tail));
 				}
 				timeouted = true;
 				d_tail += timeout.bytes();
