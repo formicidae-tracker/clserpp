@@ -42,7 +42,7 @@ struct Opts : public argparse::Args {
 	    kwarg("d,delimiter", "line delimiter to use").set_default("\r\n>");
 
 	int &timeout =
-	    kwarg("T,timeout", "timeout for IO operation in ms").set_default(100);
+	    kwarg("T,timeout", "timeout for IO operation in ms").set_default(1000);
 };
 
 std::unique_ptr<Serial> openInterface(int interface) {

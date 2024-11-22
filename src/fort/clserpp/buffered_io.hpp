@@ -7,10 +7,11 @@
 #include <string>
 
 #include <cpptrace/exceptions.hpp>
-#include <spdlog/spdlog.h>
 
 #include "buffer.hpp"
 #include "exceptions.hpp"
+
+#include <spdlog/spdlog.h>
 
 namespace fort {
 namespace clserpp {
@@ -104,7 +105,8 @@ public:
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
-			available = std::max(1U, d_reader->BytesAvailable());
+			available =
+			    std::max(delim.size(), size_t(d_reader->BytesAvailable()));
 
 			size_t left        = std::distance(d_tail, d_buffer.end());
 			bool   atBeginning = d_head == d_buffer.begin();
