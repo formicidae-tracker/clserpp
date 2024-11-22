@@ -110,9 +110,20 @@ public:
 				throw IOTimeout(std::distance(d_head, d_tail));
 			}
 
+			size_t left        = std::distance(d_tail, d_buffer.end());
+			bool   atBeginning = d_head == d_buffer.begin();
+			SPDLOG_DEBUG(
+			    " --- remaining {}, at beginning: {}, will rotate: {}",
+			    left,
+			    atBeginning,
+			    left < segmentRead && !atBeginning
+			);
 			// make room if possible
-			if (std::distance(d_tail, d_buffer.end()) < segmentRead &&
-			    d_head != d_buffer.begin()) {
+			if (left < segmentRead) {
+				if (atBeginning) {
+					throw cpptrace::runtime_error("read buffer too small");
+				}
+
 				SPDLOG_DEBUG(" --- wrapping ring buffer");
 				size_t available = std::distance(d_head, d_tail);
 				std::copy(d_head, d_tail, d_buffer.begin());
