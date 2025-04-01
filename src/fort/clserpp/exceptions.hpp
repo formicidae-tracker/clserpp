@@ -7,7 +7,8 @@ namespace clserpp {
 class IOTimeout : public cpptrace::runtime_error {
 public:
 	IOTimeout(uint32_t bytes) noexcept
-	    : cpptrace::runtime_error{"timouted after " + std::to_string(bytes)}
+	    : cpptrace::
+	          runtime_error{"timouted after " + std::to_string(bytes) + " bytes"}
 	    , d_bytes{bytes} {}
 
 	uint32_t bytes() const noexcept {
