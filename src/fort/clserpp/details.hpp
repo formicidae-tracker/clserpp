@@ -5,6 +5,7 @@
 #include "types.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cpptrace/exceptions.hpp>
 #include <optional>
 #include <string>
